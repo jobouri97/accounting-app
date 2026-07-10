@@ -1,6 +1,7 @@
 function ProductRow({
     product,
     onDeleteProduct,
+    onEditProduct
 }) {
     const formattedPrice = Number(product.price).toFixed(2);
 
@@ -53,6 +54,7 @@ function ProductRow({
                     <button
                         className="edit-button"
                         type="button"
+                        onClick={() => onEditProduct(product)}
                     >
                         Edit
                     </button>
@@ -60,9 +62,7 @@ function ProductRow({
                     <button
                         className="delete-button"
                         type="button"
-                        onClick={() =>
-                            onDeleteProduct(product.id)
-                        }
+                        onClick={() => onDeleteProduct(product.id)}
                     >
                         Delete
                     </button>

@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-function ProductForm({ onAddProduct }) {
+function ProductForm({
+    onAddProduct,
+    editingProduct,
+    onUpdateProduct,
+    onCancelEdit,
+}) {
     const initialProductState = {
         name: "",
         price: "",
@@ -10,6 +15,21 @@ function ProductForm({ onAddProduct }) {
     const [product, setProduct] = useState(initialProductState);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState("");
+
+
+    useEffect(() => {
+        if (editingProduct) {
+            setProduct({
+                name: editingProduct.name,
+                price: editingProduct.price,
+                stock_quantity: editingProduct.stock_quantity,
+            });
+        } else {
+            setProduct(initialProductState);
+        }
+
+        setFormError("");
+    }, [editingProduct]);
 
     function handleChange(event) {
         const { name, value } = event.target;
@@ -59,9 +79,18 @@ function ProductForm({ onAddProduct }) {
         try {
             setIsSubmitting(true);
 
-            const wasAdded = await onAddProduct(productData);
+            let wasSuccessful;
 
-            if (wasAdded) {
+            if (editingProduct) {
+                wasSuccessful = await onUpdateProduct(
+                    editingProduct.id,
+                    productData
+                );
+            } else {
+                wasSuccessful = await onAddProduct(productData);
+            }
+
+            if (wasSuccessful) {
                 setProduct(initialProductState);
             }
         } finally {
@@ -72,7 +101,8 @@ function ProductForm({ onAddProduct }) {
     return (
         <section className="product-form-card">
             <div className="section-heading">
-                <h2>Add New Product</h2>
+                <h2>    {editingProduct ? "Edit Product" : "Add New Product"}
+                </h2>
 
                 <p>
                     Enter the product information and click the add button.
@@ -139,15 +169,32 @@ function ProductForm({ onAddProduct }) {
                     />
                 </div>
 
-                <button
-                    className="add-product-button"
-                    type="submit"
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting
-                        ? "Adding..."
-                        : "+ Add Product"}
-                </button>
+                <div className="form-actions">
+                    {editingProduct && (
+                        <button
+                            className="cancel-button"
+                            type="button"
+                            onClick={onCancelEdit}
+                            disabled={isSubmitting}
+                        >
+                            Cancel
+                        </button>
+                    )}
+
+                    <button
+                        className="add-product-button"
+                        type="submit"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting
+                            ? editingProduct
+                                ? "Updating..."
+                                : "Adding..."
+                            : editingProduct
+                                ? "Update Product"
+                                : "Add Product"}
+                    </button>
+                </div>
             </form>
         </section>
     );

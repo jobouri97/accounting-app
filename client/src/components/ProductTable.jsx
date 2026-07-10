@@ -3,6 +3,7 @@ import ProductRow from "./ProductRow";
 function ProductTable({
     products,
     onDeleteProduct,
+    onEditProduct
 }) {
     if (products.length === 0) {
         return (
@@ -44,6 +45,7 @@ function ProductTable({
                                 key={product.id}
                                 product={product}
                                 onDeleteProduct={onDeleteProduct}
+                                onEditProduct={onEditProduct}
                             />
                         ))}
                     </tbody>

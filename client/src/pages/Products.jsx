@@ -4,6 +4,7 @@ import {
   getProducts,
   createProduct,
   deleteProduct,
+  updateProduct
 } from "../api/products";
 
 import ProductForm from "../components/ProductForm";
@@ -89,27 +90,27 @@ function Products() {
 
   async function handleUpdateProduct(productId, updatedProductData) {
     try {
-        const response = await updateProduct(
-            productId,
-            updatedProductData
-        );
+      const response = await updateProduct(
+        productId,
+        updatedProductData
+      );
 
-        setProducts((previousProducts) =>
-            previousProducts.map((product) =>
-                product.id === productId
-                    ? response.data
-                    : product
-            )
-        );
+      setProducts((previousProducts) =>
+        previousProducts.map((product) =>
+          product.id === productId
+            ? response.data
+            : product
+        )
+      );
 
-        setEditingProduct(null);
+      setEditingProduct(null);
 
-        return true;
+      return true;
     } catch (error) {
-        console.error("Failed to update product:", error);
-        return false;
+      console.error("Failed to update product:", error);
+      return false;
     }
-}
+  }
 
   return (
     <main className="products-page">
@@ -136,7 +137,12 @@ function Products() {
           </div>
         )}
 
-        <ProductForm onAddProduct={handleAddProduct} />
+        <ProductForm
+          onAddProduct={handleAddProduct}
+          editingProduct={editingProduct}
+          onUpdateProduct={handleUpdateProduct}
+          onCancelEdit={() => setEditingProduct(null)}
+        />
 
         {isLoading ? (
           <div className="products-status">
@@ -146,6 +152,8 @@ function Products() {
           <ProductTable
             products={products}
             onDeleteProduct={handleDeleteProduct}
+            onEditProduct={handleEditClick}
+
           />
         )}
       </div>

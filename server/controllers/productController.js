@@ -146,7 +146,7 @@ export async function updateProduct(req, res) {
            price = $2,
            stock_quantity = $3
        WHERE id = $4 AND user_id = $5
-       RETURNING id, name, price, stock_quantity`,
+       RETURNING id,user_id, name, price, stock_quantity`,
       [
         name.trim(),
         numericPrice,
