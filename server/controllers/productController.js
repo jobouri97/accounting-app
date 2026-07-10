@@ -1,13 +1,13 @@
 import db from "../db/index.js";
 
-const USER_ID = 1;
+const USER_ID =2;
 
 //-----------------------------GET ALL PRODUCTS-----------------------------
 
 export async function getAllProducts(req, res) {
   try {
     const result = await db.query(
-      `SELECT id, name, price, stock_quantity
+      `SELECT id, user_id, name, price, stock_quantity
        FROM products
        WHERE user_id = $1
        ORDER BY id DESC`,
@@ -87,7 +87,7 @@ export async function createProduct(req, res) {
       `INSERT INTO products
         (user_id, name, price, stock_quantity)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, name, price, stock_quantity`,
+       RETURNING id, user_id, name, price, stock_quantity`,
       [
         USER_ID,
         name.trim(),

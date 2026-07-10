@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import productRoutes from "./routes/productRoutes.js";
 import db from "./db/index.js";
-
+import cors from "cors";
 
 dotenv.config();
 
@@ -16,6 +16,12 @@ app.get("/", (req, res) => {
     message: "Accounting API is running",
   });
 });
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 
 app.use("/api/products", productRoutes);
 
