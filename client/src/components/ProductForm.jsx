@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import "./ProductForm.css";
 
 function ProductForm({
     onAddProduct,

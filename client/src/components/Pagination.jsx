@@ -1,3 +1,5 @@
+import "./Pagination.css";
+
 function Pagination({
     pagination,
     onPageChange,

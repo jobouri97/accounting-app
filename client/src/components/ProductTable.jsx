@@ -1,21 +1,33 @@
 import ProductRow from "./ProductRow";
 import Pagination from "./Pagination";
+import "./ProductTable.css";
 
 function ProductTable({
     products,
     pagination,
+    hasSearch,
     onPageChange,
     onDeleteProduct,
     onEditProduct,
 }) {
     if (products.length === 0) {
-        return (
-            <section className="empty-products">
-                <h2>No Products Found</h2>
+        if (products.length === 0) {
+            return (
+                <section className="empty-products">
+                    <h2>
+                        {hasSearch
+                            ? "No Matching Products"
+                            : "No Products Found"}
+                    </h2>
 
-                <p>Add your first product to display it here.</p>
-            </section>
-        );
+                    <p>
+                        {hasSearch
+                            ? "Try searching by another name or barcode."
+                            : "Add your first product to display it here."}
+                    </p>
+                </section>
+            );
+        }
     }
 
     const firstItem =

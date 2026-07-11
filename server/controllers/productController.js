@@ -8,6 +8,7 @@ export async function getAllProducts(req, res) {
   try {
     const page = Number(req.query.page ?? 1);
     const limit = 100;
+    const search = req.query.search?.trim() || "";
 
     if (!Number.isInteger(page) || page < 1) {
       return res.status(400).json({
@@ -15,24 +16,52 @@ export async function getAllProducts(req, res) {
       });
     }
 
-    const offset = (page - 1) * limit;
+    if (search.length > 100) {
+      return res.status(400).json({
+        message: "Search cannot exceed 100 characters",
+      });
+    }
 
-    const [productsResult, countResult] = await Promise.all([
-      db.query(
-        `SELECT id, user_id, name, price, stock_quantity, barcode
-         FROM products
-         WHERE user_id = $1
-         ORDER BY id DESC
-         LIMIT $2 OFFSET $3`,
-        [USER_ID, limit, offset]
-      ),
-      db.query(
-        `SELECT COUNT(*)::int AS total
-         FROM products
-         WHERE user_id = $1`,
-        [USER_ID]
-      ),
-    ]);
+    const offset = (page - 1) * limit;
+    const searchPattern = `%${search}%`;
+
+    const [productsResult, countResult] =
+      await Promise.all([
+        db.query(
+          `SELECT
+             id,
+             user_id,
+             name,
+             price,
+             stock_quantity,
+             barcode
+           FROM products
+           WHERE user_id = $1
+             AND (
+               name ILIKE $2
+               OR COALESCE(barcode, '') ILIKE $2
+             )
+           ORDER BY id DESC
+           LIMIT $3 OFFSET $4`,
+          [
+            USER_ID,
+            searchPattern,
+            limit,
+            offset,
+          ]
+        ),
+
+        db.query(
+          `SELECT COUNT(*)::int AS total
+           FROM products
+           WHERE user_id = $1
+             AND (
+               name ILIKE $2
+               OR COALESCE(barcode, '') ILIKE $2
+             )`,
+          [USER_ID, searchPattern]
+        ),
+      ]);
 
     const totalItems = countResult.rows[0].total;
     const totalPages = Math.ceil(totalItems / limit);
@@ -266,34 +295,34 @@ export async function updateProduct(req, res) {
   }
 }
 
-  //-----------------------------DELETE PRODUCT-----------------------------
+//-----------------------------DELETE PRODUCT-----------------------------
 
-  export async function deleteProduct(req, res) {
-    try {
-      const productId = req.params.id;
+export async function deleteProduct(req, res) {
+  try {
+    const productId = req.params.id;
 
-      const result = await db.query(
-        `DELETE FROM products
+    const result = await db.query(
+      `DELETE FROM products
        WHERE id = $1 AND user_id = $2
        RETURNING id`,
-        [productId, USER_ID]
-      );
+      [productId, USER_ID]
+    );
 
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          message: "Product not found",
-        });
-      }
-
-      res.status(200).json({
-        message: "Product deleted successfully",
-        productId: result.rows[0].id,
-      });
-    } catch (error) {
-      console.error("Delete product error:", error);
-
-      res.status(500).json({
-        message: "Failed to delete product",
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Product not found",
       });
     }
+
+    res.status(200).json({
+      message: "Product deleted successfully",
+      productId: result.rows[0].id,
+    });
+  } catch (error) {
+    console.error("Delete product error:", error);
+
+    res.status(500).json({
+      message: "Failed to delete product",
+    });
   }
+}

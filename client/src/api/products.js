@@ -4,11 +4,13 @@ const api = axios.create({
   baseURL: "http://localhost:3000/api/products",
 });
 
-export const getProducts = (page = 1) =>
+export const getProducts = (page = 1, search = "") =>
   api.get("/", {
-    params: { page },
+    params: {
+      page,
+      search,
+    },
   });
-  
 export const getProduct = (id) => api.get(`/${id}`);
 
 export const createProduct = (product) => api.post("/", product);

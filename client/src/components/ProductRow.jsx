@@ -1,3 +1,5 @@
+import "./ProductRow.css";
+
 function ProductRow({
     product,
     onDeleteProduct,

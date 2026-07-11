@@ -13,6 +13,7 @@ import {
 
 import ProductForm from "../components/ProductForm";
 import ProductTable from "../components/ProductTable";
+import SearchBox from "../components/SearchBox";
 
 import "./Products.css";
 
@@ -27,20 +28,20 @@ const initialPagination = {
 
 function Products() {
   const [products, setProducts] = useState([]);
-  const [pagination, setPagination] =
-    useState(initialPagination);
+  const [pagination, setPagination] = useState(initialPagination);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [editingProduct, setEditingProduct] =
-    useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const loadProducts = useCallback(async (page) => {
+  const loadProducts = useCallback(async (page, search = "") => {
     try {
       setIsLoading(true);
       setError("");
 
-      const response = await getProducts(page);
+      const response = await getProducts(page, search);
 
       setProducts(response.data.products);
       setPagination(response.data.pagination);
@@ -56,8 +57,23 @@ function Products() {
   }, []);
 
   useEffect(() => {
-    loadProducts(currentPage);
-  }, [currentPage, loadProducts]);
+    const timeoutId = window.setTimeout(() => {
+      setCurrentPage(1);
+      setDebouncedSearch(searchInput.trim());
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
+    loadProducts(currentPage, debouncedSearch);
+  }, [
+    currentPage,
+    debouncedSearch,
+    loadProducts,
+  ]);
 
   function handleEditClick(product) {
     setEditingProduct(product);
@@ -83,7 +99,7 @@ function Products() {
       await createProduct(productData);
 
       if (currentPage === 1) {
-        await loadProducts(1);
+        await loadProducts(1, debouncedSearch);
       } else {
         setCurrentPage(1);
       }
@@ -123,7 +139,10 @@ function Products() {
           : currentPage;
 
       if (nextPage === currentPage) {
-        await loadProducts(currentPage);
+        await loadProducts(
+          currentPage,
+          debouncedSearch
+        );
       } else {
         setCurrentPage(nextPage);
       }
@@ -203,6 +222,13 @@ function Products() {
           onCancelEdit={() => setEditingProduct(null)}
         />
 
+        <SearchBox
+          value={searchInput}
+          onChange={setSearchInput}
+          label="Search Products"
+          placeholder="Search by name or barcode"
+        />
+
         {isLoading ? (
           <div className="products-status">
             Loading products...
@@ -211,6 +237,7 @@ function Products() {
           <ProductTable
             products={products}
             pagination={pagination}
+            hasSearch={Boolean(debouncedSearch)}
             onPageChange={handlePageChange}
             onDeleteProduct={handleDeleteProduct}
             onEditProduct={handleEditClick}
