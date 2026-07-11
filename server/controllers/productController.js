@@ -1,20 +1,53 @@
 import db from "../db/index.js";
 
-const USER_ID =2;
+const USER_ID = 1;
 
 //-----------------------------GET ALL PRODUCTS-----------------------------
 
 export async function getAllProducts(req, res) {
   try {
-    const result = await db.query(
-      `SELECT id, user_id, name, price, stock_quantity
-       FROM products
-       WHERE user_id = $1
-       ORDER BY id DESC`,
-      [USER_ID]
-    );
+    const page = Number(req.query.page ?? 1);
+    const limit = 100;
 
-    res.status(200).json(result.rows);
+    if (!Number.isInteger(page) || page < 1) {
+      return res.status(400).json({
+        message: "Page must be a positive integer",
+      });
+    }
+
+    const offset = (page - 1) * limit;
+
+    const [productsResult, countResult] = await Promise.all([
+      db.query(
+        `SELECT id, user_id, name, price, stock_quantity
+         FROM products
+         WHERE user_id = $1
+         ORDER BY id DESC
+         LIMIT $2 OFFSET $3`,
+        [USER_ID, limit, offset]
+      ),
+      db.query(
+        `SELECT COUNT(*)::int AS total
+         FROM products
+         WHERE user_id = $1`,
+        [USER_ID]
+      ),
+    ]);
+
+    const totalItems = countResult.rows[0].total;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      products: productsResult.rows,
+      pagination: {
+        page,
+        pageSize: limit,
+        totalItems,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    });
   } catch (error) {
     console.error("Get products error:", error);
 
@@ -31,7 +64,7 @@ export async function getProductById(req, res) {
     const productId = req.params.id;
 
     const result = await db.query(
-      `SELECT id, name, price, stock_quantity
+      `SELECT id, name, price, stock_quantity, barcode
        FROM products
        WHERE id = $1 AND user_id = $2`,
       [productId, USER_ID]
