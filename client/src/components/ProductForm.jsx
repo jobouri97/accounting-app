@@ -116,8 +116,21 @@ function ProductForm({
             </div>
 
             {formError && (
-                <div className="form-error-message">
-                    {formError}
+                <div
+                    className="form-error-message"
+                    role="alert"
+                >
+                    <span>{formError}</span>
+
+                    <button
+                        type="button"
+                        className="form-error-close"
+                        onClick={() => setFormError("")}
+                        aria-label="Dismiss error"
+                        title="Dismiss"
+                    >
+                        ×
+                    </button>
                 </div>
             )}
 

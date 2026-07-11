@@ -124,6 +124,10 @@
 }
 
 .form-error-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 20px;
   padding: 14px;
   border: 1px solid #fecaca;
@@ -131,6 +135,36 @@
   background-color: #fef2f2;
   color: #b91c1c;
   overflow-wrap: anywhere;
+}
+
+.form-error-message span {
+  min-width: 0;
+}
+
+.form-error-close {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #b91c1c;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.form-error-close:hover {
+  background-color: #fee2e2;
+}
+
+.form-error-close:focus-visible {
+  outline: 2px solid #b91c1c;
+  outline-offset: 2px;
 }
 
 @media (max-width: 850px) {
