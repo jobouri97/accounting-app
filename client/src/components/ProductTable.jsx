@@ -40,6 +40,7 @@ function ProductTable({
                         <tr>
                             <th>Product ID</th>
                             <th>Product</th>
+                            <th>Barcode</th>
                             <th>Price</th>
                             <th>Stock</th>
                             <th>Actions</th>

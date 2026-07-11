@@ -19,7 +19,7 @@ export async function getAllProducts(req, res) {
 
     const [productsResult, countResult] = await Promise.all([
       db.query(
-        `SELECT id, user_id, name, price, stock_quantity
+        `SELECT id, user_id, name, price, stock_quantity, barcode
          FROM products
          WHERE user_id = $1
          ORDER BY id DESC
@@ -90,7 +90,20 @@ export async function getProductById(req, res) {
 
 export async function createProduct(req, res) {
   try {
-    const { name, price, stock_quantity = 0 } = req.body;
+    const {
+      name,
+      price,
+      stock_quantity = 0,
+      barcode,
+    } = req.body;
+
+    const normalizedBarcode = barcode?.trim() || null;
+
+    if (normalizedBarcode && normalizedBarcode.length > 100) {
+      return res.status(400).json({
+        message: "Barcode cannot exceed 100 characters",
+      });
+    }
 
     if (!name || price === undefined) {
       return res.status(400).json({
@@ -118,32 +131,64 @@ export async function createProduct(req, res) {
 
     const result = await db.query(
       `INSERT INTO products
-        (user_id, name, price, stock_quantity)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, user_id, name, price, stock_quantity`,
+          (user_id, name, price, stock_quantity, barcode)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING
+          id,
+          user_id,
+          name,
+          price,
+          stock_quantity,
+          barcode`,
       [
         USER_ID,
         name.trim(),
         numericPrice,
         numericStockQuantity,
+        normalizedBarcode,
       ]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error("Create product error:", error);
+    if (
+      error.code === "23505" &&
+      error.constraint === "products_barcode_key"
+    ) {
+      return res.status(409).json({
+        message: "Barcode already exists.",
+      });
+    }
+
+    console.error("Product error:", error);
 
     res.status(500).json({
-      message: "Failed to create product",
+      message: "Failed to save product",
     });
   }
 }
 
+
+
 //-----------------------------UPDATE PRODUCT-----------------------------
+
 export async function updateProduct(req, res) {
   try {
     const productId = req.params.id;
-    const { name, price, stock_quantity } = req.body;
+    const {
+      name,
+      price,
+      stock_quantity,
+      barcode,
+    } = req.body;
+
+    const normalizedBarcode = barcode?.trim() || null;
+
+    if (normalizedBarcode && normalizedBarcode.length > 100) {
+      return res.status(400).json({
+        message: "Barcode cannot exceed 100 characters",
+      });
+    }
 
     if (
       !name ||
@@ -175,20 +220,27 @@ export async function updateProduct(req, res) {
 
     const result = await db.query(
       `UPDATE products
-       SET name = $1,
-           price = $2,
-           stock_quantity = $3
-       WHERE id = $4 AND user_id = $5
-       RETURNING id,user_id, name, price, stock_quantity`,
+        SET name = $1,
+            price = $2,
+            stock_quantity = $3,
+            barcode = $4
+        WHERE id = $5 AND user_id = $6
+        RETURNING
+          id,
+          user_id,
+          name,
+          price,
+          stock_quantity,
+          barcode`,
       [
         name.trim(),
         numericPrice,
         numericStockQuantity,
+        normalizedBarcode,
         productId,
         USER_ID,
       ]
     );
-
     if (result.rows.length === 0) {
       return res.status(404).json({
         message: "Product not found",
@@ -197,42 +249,51 @@ export async function updateProduct(req, res) {
 
     res.status(200).json(result.rows[0]);
   } catch (error) {
-    console.error("Update product error:", error);
-
-    res.status(500).json({
-      message: "Failed to update product",
-    });
-  }
-}
-
-//-----------------------------DELETE PRODUCT-----------------------------
-
-export async function deleteProduct(req, res) {
-  try {
-    const productId = req.params.id;
-
-    const result = await db.query(
-      `DELETE FROM products
-       WHERE id = $1 AND user_id = $2
-       RETURNING id`,
-      [productId, USER_ID]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        message: "Product not found",
+    if (
+      error.code === "23505" &&
+      error.constraint === "products_barcode_key"
+    ) {
+      return res.status(409).json({
+        message: "Barcode already exists.",
       });
     }
 
-    res.status(200).json({
-      message: "Product deleted successfully",
-      productId: result.rows[0].id,
-    });
-  } catch (error) {
-    console.error("Delete product error:", error);
+    console.error("Product error:", error);
 
     res.status(500).json({
-      message: "Failed to delete product",
+      message: "Failed to save product",
     });
   }
 }
+
+  //-----------------------------DELETE PRODUCT-----------------------------
+
+  export async function deleteProduct(req, res) {
+    try {
+      const productId = req.params.id;
+
+      const result = await db.query(
+        `DELETE FROM products
+       WHERE id = $1 AND user_id = $2
+       RETURNING id`,
+        [productId, USER_ID]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          message: "Product not found",
+        });
+      }
+
+      res.status(200).json({
+        message: "Product deleted successfully",
+        productId: result.rows[0].id,
+      });
+    } catch (error) {
+      console.error("Delete product error:", error);
+
+      res.status(500).json({
+        message: "Failed to delete product",
+      });
+    }
+  }

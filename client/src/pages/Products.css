@@ -141,7 +141,12 @@ button:active {
 
 .product-form {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns:
+    minmax(0, 1.5fr)
+    minmax(0, 1.5fr)
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    auto;
   align-items: end;
   gap: 14px;
   width: 100%;
@@ -477,7 +482,6 @@ button:active {
 /* =========================
    Mobile
 ========================= */
-
 @media (max-width: 600px) {
   .products-page {
     padding: 16px 12px;
@@ -504,12 +508,26 @@ button:active {
     padding: 18px;
   }
 
+  /* Place every input on a separate line */
   .product-form {
     grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
 
-  .form-group:first-child,
+  .form-group,
+  .form-group:first-child {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .form-group input {
+    width: 100%;
+  }
+
+  /* Place buttons below all inputs */
   .form-actions {
+    grid-column: 1 / -1;
     display: flex;
     flex-direction: column-reverse;
     align-items: stretch;
@@ -517,7 +535,10 @@ button:active {
     width: 100%;
   }
 
-  .form-actions button {
+  .form-actions button,
+  .add-product-button,
+  .cancel-button {
+    display: block;
     width: 100%;
     height: 52px;
     min-height: 52px;
@@ -525,11 +546,7 @@ button:active {
     font-size: 16px;
   }
 
-  .add-product-button,
-  .cancel-button {
-    display: block;
-  }
-
+  /* Pagination */
   .pagination {
     align-items: stretch;
     flex-direction: column;
@@ -547,38 +564,83 @@ button:active {
     flex: 1;
   }
 }
-
 /* =========================
    Very small screens
 ========================= */
-
 @media (max-width: 320px) {
   .products-page {
-    padding: 8px;
+    padding: 8px 6px;
   }
 
-  .product-form-card,
-  .products-table-card,
-  .empty-products {
-    padding: 12px;
-    border-radius: 10px;
+  .products-header {
+    gap: 14px;
+    margin-bottom: 16px;
   }
 
   .products-header h1 {
     font-size: 22px;
   }
 
+  .products-count {
+    padding: 12px;
+  }
+
+  .product-form-card,
+  .products-table-card,
+  .empty-products {
+    padding: 12px 8px;
+    border-radius: 10px;
+  }
+
+  .section-heading {
+    margin-bottom: 14px;
+  }
+
   .section-heading h2 {
     font-size: 18px;
   }
 
+  .section-heading p {
+    font-size: 13px;
+  }
+
   .form-group input {
     padding-inline: 8px;
+    font-size: 14px;
   }
 
   .add-product-button,
   .cancel-button {
     padding-inline: 8px;
-    font-size: 13px;
+    font-size: 14px;
+  }
+
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .products-table {
+    width: 620px;
+    min-width: 620px;
+  }
+
+  .products-table th,
+  .products-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pagination-page {
+    width: 100%;
+    text-align: center;
+    order: -1;
   }
 }

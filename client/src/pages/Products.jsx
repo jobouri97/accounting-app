@@ -88,15 +88,18 @@ function Products() {
         setCurrentPage(1);
       }
 
-      return true;
+      return {
+        success: true,
+      };
     } catch (error) {
       console.error("Error creating product:", error);
 
-      setError(
-        "An error occurred while adding the product."
-      );
-
-      return false;
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          "An error occurred while adding the product.",
+      };
     }
   }
 
@@ -155,15 +158,18 @@ function Products() {
 
       setEditingProduct(null);
 
-      return true;
+      return {
+        success: true,
+      };
     } catch (error) {
       console.error("Failed to update product:", error);
 
-      setError(
-        "An error occurred while updating the product."
-      );
-
-      return false;
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          "An error occurred while updating the product.",
+      };
     }
   }
 

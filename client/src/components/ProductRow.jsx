@@ -32,6 +32,12 @@ function ProductRow({
             </td>
 
             <td>
+                <span className="product-barcode">
+                    {product.barcode || "—"}
+                </span>
+            </td>
+
+            <td>
                 ${formattedPrice}
             </td>
 

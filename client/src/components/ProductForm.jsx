@@ -8,6 +8,7 @@ function ProductForm({
 }) {
     const initialProductState = {
         name: "",
+        barcode: "",
         price: "",
         stock_quantity: "",
     };
@@ -23,6 +24,7 @@ function ProductForm({
                 name: editingProduct.name,
                 price: editingProduct.price,
                 stock_quantity: editingProduct.stock_quantity,
+                barcode: editingProduct.barcode ?? "",
             });
         } else {
             setProduct(initialProductState);
@@ -72,6 +74,7 @@ function ProductForm({
 
         const productData = {
             name: product.name.trim(),
+            barcode: product.barcode.trim() || null,
             price: Number(product.price),
             stock_quantity: Number(product.stock_quantity),
         };
@@ -79,19 +82,21 @@ function ProductForm({
         try {
             setIsSubmitting(true);
 
-            let wasSuccessful;
+            let result;
 
             if (editingProduct) {
-                wasSuccessful = await onUpdateProduct(
+                result = await onUpdateProduct(
                     editingProduct.id,
                     productData
                 );
             } else {
-                wasSuccessful = await onAddProduct(productData);
+                result = await onAddProduct(productData);
             }
 
-            if (wasSuccessful) {
+            if (result.success) {
                 setProduct(initialProductState);
+            } else {
+                setFormError(result.message);
             }
         } finally {
             setIsSubmitting(false);
@@ -132,6 +137,21 @@ function ProductForm({
                         onChange={handleChange}
                         placeholder="Example: Laptop"
                         maxLength="150"
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="barcode">Barcode</label>
+
+                    <input
+                        id="barcode"
+                        type="text"
+                        name="barcode"
+                        value={product.barcode}
+                        onChange={handleChange}
+                        placeholder="Example: 0123456789012"
+                        maxLength="100"
+                        autoComplete="off"
                     />
                 </div>
 
