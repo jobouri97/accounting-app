@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import FormError from "./FormError";
 import "./ProductForm.css";
 
 function ProductForm({
@@ -117,24 +118,10 @@ function ProductForm({
                 </p>
             </div>
 
-            {formError && (
-                <div
-                    className="form-error-message"
-                    role="alert"
-                >
-                    <span>{formError}</span>
-
-                    <button
-                        type="button"
-                        className="form-error-close"
-                        onClick={() => setFormError("")}
-                        aria-label="Dismiss error"
-                        title="Dismiss"
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
+            <FormError
+                message={formError}
+                onDismiss={() => setFormError("")}
+            />
 
             <form
                 className="product-form"

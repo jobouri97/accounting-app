@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FormError from "./FormError";
 import "./StockHistoryForm.css";
 
 function StockHistoryForm({
@@ -122,24 +123,10 @@ function StockHistoryForm({
         <section className="stock-history-form-card">
             <h2>Stock Adjustment</h2>
 
-            {formError && (
-                <div
-                    className="form-error-message"
-                    role="alert"
-                >
-                    <span>{formError}</span>
-
-                    <button
-                        type="button"
-                        className="form-error-close"
-                        onClick={() => setFormError("")}
-                        aria-label="Dismiss error"
-                        title="Dismiss"
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
+            <FormError
+                message={formError}
+                onDismiss={() => setFormError("")}
+            />
 
             <form
                 className="stock-history-form"
