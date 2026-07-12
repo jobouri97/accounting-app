@@ -1,12 +1,25 @@
+import { useEffect, useState } from "react";
 import "./SearchBox.css";
 
 function SearchBox({
-  value,
-  onChange,
+  onSearch,
+  onPageReset,
   label = "Search",
   placeholder = "Search...",
   maxLength = 100,
+  debounceMs = 300,
 }) {
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      onPageReset?.(1);
+      onSearch(value.trim());
+    }, debounceMs);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [value, debounceMs, onSearch, onPageReset]);
+
   return (
     <section className="search-box">
       <label htmlFor="search-input">
@@ -18,9 +31,7 @@ function SearchBox({
           id="search-input"
           type="search"
           value={value}
-          onChange={(event) =>
-            onChange(event.target.value)
-          }
+          onChange={(event) => setValue(event.target.value)}
           placeholder={placeholder}
           maxLength={maxLength}
           autoComplete="off"
@@ -30,7 +41,7 @@ function SearchBox({
           <button
             type="button"
             className="clear-search-button"
-            onClick={() => onChange("")}
+            onClick={() => setValue("")}
           >
             Clear
           </button>

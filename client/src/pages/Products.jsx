@@ -33,7 +33,6 @@ function Products({ onOpenStockHistory }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [editingProduct, setEditingProduct] = useState(null);
-  const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const loadProducts = useCallback(async (page, search = "") => {
@@ -55,17 +54,6 @@ function Products({ onOpenStockHistory }) {
       setIsLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setCurrentPage(1);
-      setDebouncedSearch(searchInput.trim());
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [searchInput]);
 
   useEffect(() => {
     loadProducts(currentPage, debouncedSearch);
@@ -227,8 +215,8 @@ function Products({ onOpenStockHistory }) {
         />
 
         <SearchBox
-          value={searchInput}
-          onChange={setSearchInput}
+          onSearch={setDebouncedSearch}
+          onPageReset={setCurrentPage}
           label="Search Products"
           placeholder="Search by name or barcode"
         />

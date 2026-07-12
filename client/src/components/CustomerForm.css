@@ -1,0 +1,19 @@
+.customer-form {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.5fr);
+}
+
+.customer-form .form-actions {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 850px) {
+  .customer-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .customer-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

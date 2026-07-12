@@ -1,0 +1,22 @@
+.customer-icon {
+  background-color: #ede9fe;
+  color: #6d28d9;
+}
+
+.customer-balance {
+  font-weight: 700;
+}
+
+.customer-balance.positive {
+  color: #166534;
+}
+
+.customer-balance.negative {
+  color: #b91c1c;
+}
+
+.customer-notes-cell {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
