@@ -58,7 +58,7 @@ function ProductForm({
             return;
         }
 
-        if (product.stock_quantity === "") {
+        if (!editingProduct && product.stock_quantity === "") {
             setFormError("Please enter the stock quantity.");
             return;
         }
@@ -68,7 +68,7 @@ function ProductForm({
             return;
         }
 
-        if (Number(product.stock_quantity) < 0) {
+        if (!editingProduct && Number(product.stock_quantity) < 0) {
             setFormError("The stock quantity cannot be less than zero.");
             return;
         }
@@ -77,7 +77,9 @@ function ProductForm({
             name: product.name.trim(),
             barcode: product.barcode.trim() || null,
             price: Number(product.price),
-            stock_quantity: Number(product.stock_quantity),
+            ...(!editingProduct && {
+                stock_quantity: Number(product.stock_quantity),
+            }),
         };
 
         try {
@@ -200,7 +202,10 @@ function ProductForm({
                         placeholder="0"
                         min="0"
                         step="1"
+                        disabled={Boolean(editingProduct)}
                     />
+
+                   
                 </div>
 
                 <div className="form-actions">

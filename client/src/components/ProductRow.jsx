@@ -3,7 +3,8 @@ import "./ProductRow.css";
 function ProductRow({
     product,
     onDeleteProduct,
-    onEditProduct
+    onEditProduct,
+    onOpenStockHistory,
 }) {
     const formattedPrice = Number(product.price).toFixed(2);
 
@@ -44,17 +45,20 @@ function ProductRow({
             </td>
 
             <td>
-                <span
+                <button
+                    type="button"
                     className={
                         stockQuantity > 0
-                            ? "stock-badge available"
-                            : "stock-badge unavailable"
+                            ? "stock-badge stock-button available"
+                            : "stock-badge stock-button unavailable"
                     }
+                    onClick={() => onOpenStockHistory(product.id)}
+                    title={`View stock history for ${product.name}`}
                 >
                     {stockQuantity > 0
                         ? `${stockQuantity} in stock`
                         : "Out of stock"}
-                </span>
+                </button>
             </td>
 
             <td>

@@ -158,27 +158,56 @@ export async function createProduct(req, res) {
       });
     }
 
-    const result = await db.query(
-      `INSERT INTO products
-          (user_id, name, price, stock_quantity, barcode)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING
-          id,
-          user_id,
-          name,
-          price,
-          stock_quantity,
-          barcode`,
-      [
-        USER_ID,
-        name.trim(),
-        numericPrice,
-        numericStockQuantity,
-        normalizedBarcode,
-      ]
-    );
+    const client = await db.connect();
 
-    res.status(201).json(result.rows[0]);
+    try {
+      await client.query("BEGIN");
+
+      const productResult = await client.query(
+        `INSERT INTO products
+            (user_id, name, price, stock_quantity, barcode)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING
+            id,
+            user_id,
+            name,
+            price,
+            stock_quantity,
+            barcode`,
+        [
+          USER_ID,
+          name.trim(),
+          numericPrice,
+          numericStockQuantity,
+          normalizedBarcode,
+        ]
+      );
+
+      const newProduct = productResult.rows[0];
+
+      if (numericStockQuantity > 0) {
+        await client.query(
+          `INSERT INTO stock_history
+              (product_id, user_id, quantity, description, created_at)
+            VALUES ($1, $2, $3, $4, NOW())`,
+          [
+            newProduct.id,
+            USER_ID,
+            numericStockQuantity,
+            "Initial stock",
+          ]
+        );
+      }
+
+      await client.query("COMMIT");
+
+      res.status(201).json(newProduct);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     if (
       error.code === "23505" &&
@@ -204,12 +233,7 @@ export async function createProduct(req, res) {
 export async function updateProduct(req, res) {
   try {
     const productId = req.params.id;
-    const {
-      name,
-      price,
-      stock_quantity,
-      barcode,
-    } = req.body;
+    const { name, price, barcode } = req.body;
 
     const normalizedBarcode = barcode?.trim() || null;
 
@@ -219,18 +243,13 @@ export async function updateProduct(req, res) {
       });
     }
 
-    if (
-      !name ||
-      price === undefined ||
-      stock_quantity === undefined
-    ) {
+    if (!name || price === undefined) {
       return res.status(400).json({
-        message: "Name, price and stock quantity are required",
+        message: "Name and price are required",
       });
     }
 
     const numericPrice = Number(price);
-    const numericStockQuantity = Number(stock_quantity);
 
     if (Number.isNaN(numericPrice) || numericPrice < 0) {
       return res.status(400).json({
@@ -238,22 +257,12 @@ export async function updateProduct(req, res) {
       });
     }
 
-    if (
-      !Number.isInteger(numericStockQuantity) ||
-      numericStockQuantity < 0
-    ) {
-      return res.status(400).json({
-        message: "Stock quantity must be a non-negative integer",
-      });
-    }
-
     const result = await db.query(
       `UPDATE products
         SET name = $1,
             price = $2,
-            stock_quantity = $3,
-            barcode = $4
-        WHERE id = $5 AND user_id = $6
+            barcode = $3
+        WHERE id = $4 AND user_id = $5
         RETURNING
           id,
           user_id,
@@ -264,7 +273,6 @@ export async function updateProduct(req, res) {
       [
         name.trim(),
         numericPrice,
-        numericStockQuantity,
         normalizedBarcode,
         productId,
         USER_ID,

@@ -74,6 +74,19 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
+.form-group input:disabled {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.field-help {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .form-actions {
   display: flex;
   align-items: center;

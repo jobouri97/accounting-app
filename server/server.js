@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import productRoutes from "./routes/productRoutes.js";
+import stockHistoryRoutes from "./routes/stockHistoryRoutes.js";
 import db from "./db/index.js";
 import cors from "cors";
 
@@ -24,6 +25,7 @@ app.use(
 );
 
 app.use("/api/products", productRoutes);
+app.use("/api/stock-history", stockHistoryRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

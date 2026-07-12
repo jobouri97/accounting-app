@@ -25,8 +25,8 @@ const initialPagination = {
   hasNextPage: false,
   hasPreviousPage: false,
 };
+function Products({ onOpenStockHistory }) {
 
-function Products() {
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState(initialPagination);
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,6 +77,10 @@ function Products() {
 
   function handleEditClick(product) {
     setEditingProduct(product);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function handlePageChange(page) {
@@ -241,6 +245,7 @@ function Products() {
             onPageChange={handlePageChange}
             onDeleteProduct={handleDeleteProduct}
             onEditProduct={handleEditClick}
+            onOpenStockHistory={onOpenStockHistory}
           />
         )}
       </div>

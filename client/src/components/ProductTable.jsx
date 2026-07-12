@@ -9,6 +9,7 @@ function ProductTable({
     onPageChange,
     onDeleteProduct,
     onEditProduct,
+    onOpenStockHistory,
 }) {
     if (products.length === 0) {
         if (products.length === 0) {
@@ -66,6 +67,7 @@ function ProductTable({
                                 product={product}
                                 onDeleteProduct={onDeleteProduct}
                                 onEditProduct={onEditProduct}
+                                onOpenStockHistory={onOpenStockHistory}
                             />
                         ))}
                     </tbody>
