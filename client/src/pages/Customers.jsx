@@ -20,7 +20,7 @@ const initialPagination = {
   hasPreviousPage: false,
 };
 
-function Customers() {
+function Customers({ onOpenTransactions }) {
   const [customers, setCustomers] = useState([]);
   const [pagination, setPagination] = useState(initialPagination);
   const [currentPage, setCurrentPage] = useState(1);
@@ -190,6 +190,7 @@ function Customers() {
             onPageChange={handlePageChange}
             onEditCustomer={handleEditCustomer}
             onDeleteCustomer={handleDeleteCustomer}
+            onOpenTransactions={onOpenTransactions}
           />
         )}
       </div>

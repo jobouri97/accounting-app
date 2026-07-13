@@ -3,11 +3,13 @@ import { useState } from "react";
 import Products from "./pages/Products";
 import StockHistory from "./pages/StockHistory";
 import Customers from "./pages/Customers";
+import Transactions from "./pages/Transactions";
 import "./App.css";
 
 function App() {
   const [currentPage, setCurrentPage] = useState("products");
   const [stockHistoryProductId, setStockHistoryProductId] = useState(null);
+  const [transactionCustomerId, setTransactionCustomerId] = useState(null);
 
   function openProductStockHistory(productId) {
     setStockHistoryProductId(productId);
@@ -17,6 +19,16 @@ function App() {
   function openAllStockHistory() {
     setStockHistoryProductId(null);
     setCurrentPage("stock-history");
+  }
+
+  function openCustomerTransactions(customerId) {
+    setTransactionCustomerId(customerId);
+    setCurrentPage("transactions");
+  }
+
+  function openAllTransactions() {
+    setTransactionCustomerId(null);
+    setCurrentPage("transactions");
   }
 
   return (
@@ -69,6 +81,18 @@ function App() {
               </svg>
               Customers
             </button>
+
+            <button
+              type="button"
+              className={currentPage === "transactions" ? "active" : ""}
+              onClick={openAllTransactions}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h10" />
+                <path d="m17 16 3 2-3 2" />
+              </svg>
+              Transactions
+            </button>
           </nav>
         </div>
       </header>
@@ -81,8 +105,13 @@ function App() {
         <StockHistory
           initialProductId={stockHistoryProductId}
         />
+      ) : currentPage === "customers" ? (
+        <Customers onOpenTransactions={openCustomerTransactions} />
       ) : (
-        <Customers />
+        <Transactions
+          key={transactionCustomerId ?? "all-transactions"}
+          initialCustomerId={transactionCustomerId}
+        />
       )}
     </>
   );

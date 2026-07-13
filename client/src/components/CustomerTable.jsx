@@ -9,6 +9,7 @@ function CustomerTable({
   onPageChange,
   onEditCustomer,
   onDeleteCustomer,
+  onOpenTransactions,
 }) {
   if (customers.length === 0) {
     return (
@@ -49,6 +50,7 @@ function CustomerTable({
                 customer={customer}
                 onEditCustomer={onEditCustomer}
                 onDeleteCustomer={onDeleteCustomer}
+                onOpenTransactions={onOpenTransactions}
               />
             ))}
           </tbody>

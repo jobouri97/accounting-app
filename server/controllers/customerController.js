@@ -68,14 +68,24 @@ export async function getAllCustomers(req, res) {
 
     const [customersResult, countResult] = await Promise.all([
       db.query(
-        `SELECT id, user_id, customer_name, phone, notes, balance
+        `SELECT customers.id,
+                customers.user_id,
+                customers.customer_name,
+                customers.phone,
+                customers.notes,
+                COALESCE((
+                  SELECT SUM(transactions.credit - transactions.debit)
+                  FROM transactions
+                  WHERE transactions.customer_id = customers.id
+                    AND transactions.user_id = customers.user_id
+                ), 0) AS balance
          FROM customers
-         WHERE user_id = $1
+         WHERE customers.user_id = $1
            AND (
-             customer_name ILIKE $2
-             OR COALESCE(phone, '') ILIKE $2
+             customers.customer_name ILIKE $2
+             OR COALESCE(customers.phone, '') ILIKE $2
            )
-         ORDER BY id DESC
+         ORDER BY customers.id DESC
          LIMIT $3 OFFSET $4`,
         [USER_ID, searchPattern, PAGE_SIZE, offset]
       ),
@@ -122,9 +132,19 @@ export async function getCustomerById(req, res) {
     }
 
     const result = await db.query(
-      `SELECT id, user_id, customer_name, phone, notes, balance
+      `SELECT customers.id,
+              customers.user_id,
+              customers.customer_name,
+              customers.phone,
+              customers.notes,
+              COALESCE((
+                SELECT SUM(transactions.credit - transactions.debit)
+                FROM transactions
+                WHERE transactions.customer_id = customers.id
+                  AND transactions.user_id = customers.user_id
+              ), 0) AS balance
        FROM customers
-       WHERE id = $1 AND user_id = $2`,
+       WHERE customers.id = $1 AND customers.user_id = $2`,
       [customerId, USER_ID]
     );
 

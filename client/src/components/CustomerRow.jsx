@@ -1,7 +1,7 @@
 import "./ProductRow.css";
 import "./CustomerRow.css";
 
-function CustomerRow({ customer, onEditCustomer, onDeleteCustomer }) {
+function CustomerRow({ customer, onEditCustomer, onDeleteCustomer, onOpenTransactions }) {
   const balance = Number(customer.balance);
 
   return (
@@ -19,8 +19,15 @@ function CustomerRow({ customer, onEditCustomer, onDeleteCustomer }) {
         </div>
       </td>
       <td>{customer.phone || "—"}</td>
-      <td className={balance > 0 ? "customer-balance positive" : balance < 0 ? "customer-balance negative" : "customer-balance"}>
-        ${balance.toFixed(2)}
+      <td>
+        <button
+          type="button"
+          className={balance > 0 ? "customer-balance-button positive" : balance < 0 ? "customer-balance-button negative" : "customer-balance-button zero"}
+          onClick={() => onOpenTransactions(customer.id)}
+          title="View customer transactions"
+        >
+          {balance.toFixed(2)}
+        </button>
       </td>
       <td className="customer-notes-cell" title={customer.notes || ""}>
         {customer.notes || "—"}

@@ -41,7 +41,7 @@ function ProductRow({
             </td>
 
             <td>
-                ${formattedPrice}
+                {formattedPrice}
             </td>
 
             <td>

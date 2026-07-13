@@ -26,10 +26,16 @@ function StockHistoryForm({
             product.id === Number(lockedProductId)
     );
 
+    const selectedProduct = products.find(
+        (product) => product.id === Number(form.product_id)
+    );
+    const isShowingSelectedProduct =
+        selectedProduct?.name === productSearch;
+
     const filteredProducts = products.filter((product) => {
         const searchValue = productSearch.trim().toLowerCase();
 
-        if (!searchValue) {
+        if (!searchValue || isShowingSelectedProduct) {
             return true;
         }
 
@@ -158,6 +164,7 @@ function StockHistoryForm({
                                 value={productSearch}
                                 onChange={handleProductSearch}
                                 onFocus={() => setIsProductListOpen(true)}
+                                onClick={() => setIsProductListOpen(true)}
                                 onBlur={() => {
                                     window.setTimeout(() => {
                                         setIsProductListOpen(false);
@@ -227,7 +234,7 @@ function StockHistoryForm({
                             aria-haspopup="listbox"
                             aria-expanded={isAdjustmentListOpen}
                             onClick={() => {
-                                setIsAdjustmentListOpen((isOpen) => !isOpen);
+                                setIsAdjustmentListOpen(true);
                             }}
                             onBlur={() => {
                                 window.setTimeout(() => {

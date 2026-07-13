@@ -20,3 +20,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.customer-balance-button {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 20px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.customer-balance-button.positive { background: #dcfce7; color: #166534; }
+.customer-balance-button.negative { background: #fee2e2; color: #991b1b; }
+.customer-balance-button.zero { background: #f3f4f6; color: #4b5563; }
+.customer-balance-button:hover { text-decoration: underline; filter: brightness(.95); }
+.customer-balance-button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }

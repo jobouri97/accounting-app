@@ -95,6 +95,11 @@ export async function getAllTransactions(req, res) {
                 transactions.debit,
                 transactions.credit,
                 transactions.note,
+                SUM(transactions.credit - transactions.debit) OVER (
+                  PARTITION BY transactions.customer_id
+                  ORDER BY transactions.created_at, transactions.id
+                  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                ) AS balance,
                 customers.customer_name
          FROM transactions
          INNER JOIN customers
@@ -203,7 +208,7 @@ export async function createTransaction(req, res) {
 
     const balanceResult = await client.query(
       `UPDATE customers
-       SET balance = balance + $1 - $2
+       SET balance = balance - $1 + $2
        WHERE id = $3 AND user_id = $4
        RETURNING balance`,
       [debit, credit, customerId, USER_ID]
@@ -305,7 +310,7 @@ export async function updateTransaction(req, res) {
 
     const balanceResult = await client.query(
        `UPDATE customers
-       SET balance = balance - $1 + $2 + $3 - $4
+       SET balance = balance + $1 - $2 - $3 + $4
        WHERE id = $5 AND user_id = $6
        RETURNING balance`,
       [existing.debit, existing.credit, debit, credit, existing.customer_id, USER_ID]
@@ -360,7 +365,7 @@ export async function deleteTransaction(req, res) {
     const transaction = result.rows[0];
     const balanceResult = await client.query(
       `UPDATE customers
-       SET balance = balance - $1 + $2
+       SET balance = balance + $1 - $2
        WHERE id = $3 AND user_id = $4
        RETURNING balance`,
       [transaction.debit, transaction.credit, transaction.customer_id, USER_ID]
