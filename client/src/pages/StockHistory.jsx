@@ -28,7 +28,7 @@ function StockHistory({ initialProductId = null }) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [products, setProducts] = useState([]);
-    const [selectedProductId] = useState(initialProductId);
+    const [selectedProductId, setSelectedProductId] = useState(initialProductId);
 
     const loadHistory = useCallback(
         async (page, productId = null) => {
@@ -58,7 +58,11 @@ function StockHistory({ initialProductId = null }) {
     );
 
     useEffect(() => {
-        loadHistory(currentPage, selectedProductId);
+        const timeoutId = window.setTimeout(() => {
+            loadHistory(currentPage, selectedProductId);
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
     }, [currentPage, selectedProductId, loadHistory]);
 
     const loadProducts = useCallback(async () => {
@@ -77,7 +81,8 @@ function StockHistory({ initialProductId = null }) {
     }, []);
 
     useEffect(() => {
-        loadProducts();
+        const timeoutId = window.setTimeout(() => loadProducts(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadProducts]);
 
     async function handleAddStock(stockData) {
@@ -159,7 +164,8 @@ function StockHistory({ initialProductId = null }) {
                 <StockHistoryForm
                     products={products}
                     onAddStock={handleAddStock}
-                    lockedProductId={selectedProductId}
+                    lockedProductId={initialProductId}
+                    onProductChange={setSelectedProductId}
                 />
 
                 {isLoading ? (

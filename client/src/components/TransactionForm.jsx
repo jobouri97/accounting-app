@@ -7,13 +7,22 @@ function TransactionForm({
   customers,
   lockedCustomerId = null,
   onAddTransaction,
+  editingTransaction = null,
+  onUpdateTransaction,
+  onCancelEdit,
   onCustomerChange,
 }) {
+  const editingDebit = Number(editingTransaction?.debit);
+  const initialCustomerId = editingTransaction?.customer_id ?? lockedCustomerId ?? "";
   const [form, setForm] = useState({
-    customer_id: lockedCustomerId ?? "",
-    transactionType: "debit",
-    amount: "",
-    note: "",
+    customer_id: initialCustomerId,
+    transactionType: editingTransaction
+      ? editingDebit > 0 ? "debit" : "credit"
+      : "debit",
+    amount: editingTransaction
+      ? editingDebit > 0 ? editingTransaction.debit : editingTransaction.credit
+      : "",
+    note: editingTransaction?.note ?? "",
   });
   const [customerSearch, setCustomerSearch] = useState("");
   const [isCustomerListOpen, setIsCustomerListOpen] = useState(false);
@@ -22,7 +31,7 @@ function TransactionForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const lockedCustomer = customers.find(
-    (customer) => customer.id === Number(lockedCustomerId)
+    (customer) => customer.id === Number(initialCustomerId)
   );
   const selectedCustomer = customers.find(
     (customer) => customer.id === Number(form.customer_id)
@@ -32,10 +41,10 @@ function TransactionForm({
   const filteredCustomers = isShowingSelectedCustomer
     ? customers
     : customers.filter((customer) =>
-        customer.customer_name
-          .toLowerCase()
-          .includes(customerSearch.trim().toLowerCase())
-      );
+      customer.customer_name
+        .toLowerCase()
+        .includes(customerSearch.trim().toLowerCase())
+    );
 
   function handleCustomerSearch(event) {
     setCustomerSearch(event.target.value);
@@ -74,26 +83,33 @@ function TransactionForm({
 
     try {
       setIsSubmitting(true);
-      const result = await onAddTransaction({
-        customer_id: customerId,
+      const transactionData = {
         debit: form.transactionType === "debit" ? form.amount : 0,
         credit: form.transactionType === "credit" ? form.amount : 0,
         note: form.note.trim() || null,
-      });
+      };
+      const result = editingTransaction
+        ? await onUpdateTransaction(editingTransaction.id, transactionData)
+        : await onAddTransaction({
+          customer_id: customerId,
+          ...transactionData,
+        });
 
       if (!result.success) {
         setFormError(result.message);
         return;
       }
 
-      setForm({
-        customer_id: lockedCustomerId ?? "",
-        transactionType: "debit",
-        amount: "",
-        note: "",
-      });
+      if (!editingTransaction) {
+        setForm({
+          customer_id: lockedCustomerId ?? "",
+          transactionType: "debit",
+          amount: "",
+          note: "",
+        });
+      }
 
-      if (!lockedCustomerId) setCustomerSearch("");
+      if (!lockedCustomerId && !editingTransaction) setCustomerSearch("");
     } finally {
       setIsSubmitting(false);
     }
@@ -101,13 +117,13 @@ function TransactionForm({
 
   return (
     <section className="transaction-form-card">
-      <h2>New Transaction</h2>
+      <h2>{editingTransaction ? "Edit Transaction" : "New Transaction"}</h2>
       <FormError message={formError} onDismiss={() => setFormError("")} />
 
       <form className="transaction-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="transaction-customer">Customer</label>
-          {lockedCustomerId ? (
+          {lockedCustomerId || editingTransaction ? (
             <input
               id="transaction-customer"
               value={lockedCustomer ? `#${lockedCustomer.id} — ${lockedCustomer.customer_name}` : "Loading customer..."}
@@ -218,9 +234,18 @@ function TransactionForm({
           <input id="transaction-note" name="note" value={form.note} onChange={handleChange} placeholder="Optional note" />
         </div>
 
-        <button className="save-transaction-button" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Save Transaction"}
-        </button>
+        <div className="transaction-form-actions">
+          {editingTransaction && (
+            <button className="cancel-transaction-button" type="button" onClick={onCancelEdit} disabled={isSubmitting}>
+              Cancel
+            </button>
+          )}
+          <button className="save-transaction-button" type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? editingTransaction ? "Updating..." : "Saving..."
+              : editingTransaction ? "Update Transaction" : "Save Transaction"}
+          </button>
+        </div>
       </form>
     </section>
   );

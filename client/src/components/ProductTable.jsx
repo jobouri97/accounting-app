@@ -54,7 +54,8 @@ function ProductTable({
                             <th>Product ID</th>
                             <th>Product</th>
                             <th>Barcode</th>
-                            <th>Price</th>
+                            <th>Purchase Price</th>
+                            <th>Selling Price</th>
                             <th>Stock</th>
                             <th>Actions</th>
                         </tr>

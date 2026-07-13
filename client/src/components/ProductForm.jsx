@@ -11,7 +11,8 @@ function ProductForm({
     const initialProductState = {
         name: "",
         barcode: "",
-        price: "",
+        purchase_price: "",
+        selling_price: "",
         stock_quantity: "",
     };
 
@@ -24,7 +25,8 @@ function ProductForm({
         if (editingProduct) {
             setProduct({
                 name: editingProduct.name,
-                price: editingProduct.price,
+                purchase_price: editingProduct.purchase_price,
+                selling_price: editingProduct.selling_price,
                 stock_quantity: editingProduct.stock_quantity,
                 barcode: editingProduct.barcode ?? "",
             });
@@ -54,8 +56,13 @@ function ProductForm({
             return;
         }
 
-        if (product.price === "") {
-            setFormError("Please enter the product price.");
+        if (product.purchase_price === "") {
+            setFormError("Please enter the purchase price.");
+            return;
+        }
+
+        if (product.selling_price === "") {
+            setFormError("Please enter the selling price.");
             return;
         }
 
@@ -64,8 +71,18 @@ function ProductForm({
             return;
         }
 
-        if (Number(product.price) < 0) {
-            setFormError("The product price cannot be less than zero.");
+        if (Number(product.purchase_price) < 0) {
+            setFormError("The purchase price cannot be less than zero.");
+            return;
+        }
+
+        if (Number(product.selling_price) < 0) {
+            setFormError("The selling price cannot be less than zero.");
+            return;
+        }
+
+        if (Number(product.selling_price) < Number(product.purchase_price)) {
+            setFormError("The selling price cannot be less than the purchase price.");
             return;
         }
 
@@ -77,7 +94,8 @@ function ProductForm({
         const productData = {
             name: product.name.trim(),
             barcode: product.barcode.trim() || null,
-            price: Number(product.price),
+            purchase_price: Number(product.purchase_price),
+            selling_price: Number(product.selling_price),
             ...(!editingProduct && {
                 stock_quantity: Number(product.stock_quantity),
             }),
@@ -112,10 +130,6 @@ function ProductForm({
             <div className="section-heading">
                 <h2>    {editingProduct ? "Edit Product" : "Add New Product"}
                 </h2>
-
-                <p>
-                    Enter the product information and click the add button.
-                </p>
             </div>
 
             <FormError
@@ -152,22 +166,39 @@ function ProductForm({
                         name="barcode"
                         value={product.barcode}
                         onChange={handleChange}
-                        placeholder="Example: 0123456789012"
+                        placeholder="Example: 0123456789"
                         maxLength="100"
                         autoComplete="off"
                     />
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="price">
-                        Price
+                    <label htmlFor="purchase_price">
+                        Purchase Price
                     </label>
 
                     <input
-                        id="price"
+                        id="purchase_price"
                         type="number"
-                        name="price"
-                        value={product.price}
+                        name="purchase_price"
+                        value={product.purchase_price}
+                        onChange={handleChange}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="selling_price">
+                        Selling Price
+                    </label>
+
+                    <input
+                        id="selling_price"
+                        type="number"
+                        name="selling_price"
+                        value={product.selling_price}
                         onChange={handleChange}
                         placeholder="0.00"
                         min="0"

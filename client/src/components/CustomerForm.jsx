@@ -79,7 +79,6 @@ function CustomerForm({
     <section className="product-form-card customer-form-card">
       <div className="section-heading">
         <h2>{editingCustomer ? "Edit Customer" : "Add New Customer"}</h2>
-        <p>Enter the customer contact details and notes.</p>
       </div>
 
       <FormError

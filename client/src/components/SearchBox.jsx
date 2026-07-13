@@ -36,16 +36,6 @@ function SearchBox({
           maxLength={maxLength}
           autoComplete="off"
         />
-
-        {value && (
-          <button
-            type="button"
-            className="clear-search-button"
-            onClick={() => setValue("")}
-          >
-            Clear
-          </button>
-        )}
       </div>
     </section>
   );

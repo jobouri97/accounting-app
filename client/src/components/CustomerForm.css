@@ -1,9 +1,9 @@
 .customer-form {
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.5fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.5fr) auto;
 }
 
 .customer-form .form-actions {
-  grid-column: 1 / -1;
+  grid-column: auto;
 }
 
 @media (max-width: 850px) {

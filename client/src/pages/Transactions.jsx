@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getCustomers } from "../api/customers";
-import { createTransaction, getTransactions } from "../api/transactions";
+import {
+  createTransaction,
+  deleteTransaction,
+  getTransactions,
+  updateTransaction,
+} from "../api/transactions";
 import Pagination from "../components/Pagination";
 import TransactionForm from "../components/TransactionForm";
 import "./Transactions.css";
@@ -23,6 +28,7 @@ function Transactions({ initialCustomerId = null }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   const loadTransactions = useCallback(async (page, customerId) => {
     try {
@@ -89,6 +95,55 @@ function Transactions({ initialCustomerId = null }) {
     }
   }
 
+  async function handleUpdateTransaction(transactionId, transactionData) {
+    try {
+      setError("");
+      await updateTransaction(transactionId, transactionData);
+      await Promise.all([
+        loadCustomers(),
+        loadTransactions(currentPage, selectedCustomerId),
+      ]);
+      setEditingTransaction(null);
+      return { success: true };
+    } catch (requestError) {
+      return {
+        success: false,
+        message: requestError.response?.data?.message || "An error occurred while updating the transaction.",
+      };
+    }
+  }
+
+  async function handleDeleteTransaction(transactionId) {
+    if (!window.confirm("Are you sure you want to delete this transaction?")) return;
+
+    try {
+      setError("");
+      await deleteTransaction(transactionId);
+
+      if (editingTransaction?.id === transactionId) {
+        setEditingTransaction(null);
+      }
+
+      await loadCustomers();
+      const nextPage = transactions.length === 1 && currentPage > 1
+        ? currentPage - 1
+        : currentPage;
+
+      if (nextPage === currentPage) {
+        await loadTransactions(currentPage, selectedCustomerId);
+      } else {
+        setCurrentPage(nextPage);
+      }
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "An error occurred while deleting the transaction.");
+    }
+  }
+
+  function handleEditTransaction(transaction) {
+    setEditingTransaction(transaction);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function handlePageChange(page) {
     if (page < 1 || page > pagination.totalPages || page === currentPage || isLoading) return;
     setCurrentPage(page);
@@ -115,9 +170,17 @@ function Transactions({ initialCustomerId = null }) {
         {error && <div className="error-message">{error}</div>}
 
         <TransactionForm
+          key={editingTransaction
+            ? `edit-${editingTransaction.id}`
+            : initialCustomerId
+              ? `customer-${initialCustomerId}`
+              : "new-transaction"}
           customers={customers}
           lockedCustomerId={initialCustomerId}
           onAddTransaction={handleAddTransaction}
+          editingTransaction={editingTransaction}
+          onUpdateTransaction={handleUpdateTransaction}
+          onCancelEdit={() => setEditingTransaction(null)}
           onCustomerChange={setSelectedCustomerId}
         />
 
@@ -129,11 +192,11 @@ function Transactions({ initialCustomerId = null }) {
           <section className="transactions-table-card">
             <div className="transactions-table-wrapper">
               <table className="transactions-table">
-                <thead><tr><th>ID</th><th>Customer</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Note</th><th>Date</th></tr></thead>
+                <thead><tr><th>#</th><th>Customer</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Note</th><th>Date</th><th>Actions</th></tr></thead>
                 <tbody>
-                  {transactions.map((transaction) => (
+                  {transactions.map((transaction, index) => (
                     <tr key={transaction.id}>
-                      <td>#{transaction.id}</td>
+                      <td>{pagination.totalItems - (currentPage - 1) * pagination.pageSize - index}</td>
                       <td>{transaction.customer_name}</td>
                       <td className="transaction-debit">{Number(transaction.debit) > 0 ? `${Number(transaction.debit).toFixed(2)}` : "—"}</td>
                       <td className="transaction-credit">{Number(transaction.credit) > 0 ? `${Number(transaction.credit).toFixed(2)}` : "—"}</td>
@@ -142,6 +205,16 @@ function Transactions({ initialCustomerId = null }) {
                       </td>
                       <td>{transaction.note || "—"}</td>
                       <td>{new Date(transaction.created_at).toLocaleString()}</td>
+                      <td>
+                        <div className="transaction-actions">
+                          <button type="button" className="transaction-edit-button" onClick={() => handleEditTransaction(transaction)}>
+                            Edit
+                          </button>
+                          <button type="button" className="transaction-delete-button" onClick={() => handleDeleteTransaction(transaction.id)}>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

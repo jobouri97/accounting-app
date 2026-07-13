@@ -32,7 +32,8 @@ export async function getAllProducts(req, res) {
              id,
              user_id,
              name,
-             price,
+             purchase_price,
+             selling_price,
              stock_quantity,
              barcode
            FROM products
@@ -93,7 +94,7 @@ export async function getProductById(req, res) {
     const productId = req.params.id;
 
     const result = await db.query(
-      `SELECT id, name, price, stock_quantity, barcode
+      `SELECT id, name, purchase_price, selling_price, stock_quantity, barcode
        FROM products
        WHERE id = $1 AND user_id = $2`,
       [productId, USER_ID]
@@ -121,11 +122,13 @@ export async function createProduct(req, res) {
   try {
     const {
       name,
-      price,
+      purchase_price,
+      selling_price,
       stock_quantity = 0,
       barcode,
     } = req.body;
 
+    const normalizedName = typeof name === "string" ? name.trim() : "";
     const normalizedBarcode = barcode?.trim() || null;
 
     if (normalizedBarcode && normalizedBarcode.length > 100) {
@@ -134,18 +137,31 @@ export async function createProduct(req, res) {
       });
     }
 
-    if (!name || price === undefined) {
+    if (!normalizedName || purchase_price === undefined || selling_price === undefined) {
       return res.status(400).json({
-        message: "Product name and price are required",
+        message: "Product name, purchase price, and selling price are required",
       });
     }
 
-    const numericPrice = Number(price);
+    const numericPurchasePrice = Number(purchase_price);
+    const numericSellingPrice = Number(selling_price);
     const numericStockQuantity = Number(stock_quantity);
 
-    if (Number.isNaN(numericPrice) || numericPrice < 0) {
+    if (!Number.isFinite(numericPurchasePrice) || numericPurchasePrice < 0) {
       return res.status(400).json({
-        message: "Price must be a valid non-negative number",
+        message: "Purchase price must be a valid non-negative number",
+      });
+    }
+
+    if (!Number.isFinite(numericSellingPrice) || numericSellingPrice < 0) {
+      return res.status(400).json({
+        message: "Selling price must be a valid non-negative number",
+      });
+    }
+
+    if (numericSellingPrice < numericPurchasePrice) {
+      return res.status(400).json({
+        message: "Selling price cannot be less than purchase price",
       });
     }
 
@@ -158,6 +174,17 @@ export async function createProduct(req, res) {
       });
     }
 
+    const existingProduct = await db.query(
+      `SELECT id FROM products
+       WHERE user_id = $1 AND LOWER(name) = LOWER($2)
+       LIMIT 1`,
+      [USER_ID, normalizedName]
+    );
+
+    if (existingProduct.rows.length > 0) {
+      return res.status(409).json({ message: "Product name already exists" });
+    }
+
     const client = await db.connect();
 
     try {
@@ -165,19 +192,21 @@ export async function createProduct(req, res) {
 
       const productResult = await client.query(
         `INSERT INTO products
-            (user_id, name, price, stock_quantity, barcode)
-          VALUES ($1, $2, $3, $4, $5)
+            (user_id, name, purchase_price, selling_price, stock_quantity, barcode)
+          VALUES ($1, $2, $3, $4, $5, $6)
           RETURNING
             id,
             user_id,
             name,
-            price,
+            purchase_price,
+            selling_price,
             stock_quantity,
             barcode`,
         [
           USER_ID,
-          name.trim(),
-          numericPrice,
+          normalizedName,
+          numericPurchasePrice,
+          numericSellingPrice,
           numericStockQuantity,
           normalizedBarcode,
         ]
@@ -233,8 +262,9 @@ export async function createProduct(req, res) {
 export async function updateProduct(req, res) {
   try {
     const productId = req.params.id;
-    const { name, price, barcode } = req.body;
+    const { name, purchase_price, selling_price, barcode } = req.body;
 
+    const normalizedName = typeof name === "string" ? name.trim() : "";
     const normalizedBarcode = barcode?.trim() || null;
 
     if (normalizedBarcode && normalizedBarcode.length > 100) {
@@ -243,36 +273,65 @@ export async function updateProduct(req, res) {
       });
     }
 
-    if (!name || price === undefined) {
+    if (!normalizedName || purchase_price === undefined || selling_price === undefined) {
       return res.status(400).json({
-        message: "Name and price are required",
+        message: "Name, purchase price, and selling price are required",
       });
     }
 
-    const numericPrice = Number(price);
+    const numericPurchasePrice = Number(purchase_price);
+    const numericSellingPrice = Number(selling_price);
 
-    if (Number.isNaN(numericPrice) || numericPrice < 0) {
+    if (!Number.isFinite(numericPurchasePrice) || numericPurchasePrice < 0) {
       return res.status(400).json({
-        message: "Price must be a valid non-negative number",
+        message: "Purchase price must be a valid non-negative number",
       });
+    }
+
+    if (!Number.isFinite(numericSellingPrice) || numericSellingPrice < 0) {
+      return res.status(400).json({
+        message: "Selling price must be a valid non-negative number",
+      });
+    }
+
+    if (numericSellingPrice < numericPurchasePrice) {
+      return res.status(400).json({
+        message: "Selling price cannot be less than purchase price",
+      });
+    }
+
+    const existingProduct = await db.query(
+      `SELECT id FROM products
+       WHERE user_id = $1
+         AND LOWER(name) = LOWER($2)
+         AND id <> $3
+       LIMIT 1`,
+      [USER_ID, normalizedName, productId]
+    );
+
+    if (existingProduct.rows.length > 0) {
+      return res.status(409).json({ message: "Product name already exists" });
     }
 
     const result = await db.query(
       `UPDATE products
         SET name = $1,
-            price = $2,
-            barcode = $3
-        WHERE id = $4 AND user_id = $5
+            purchase_price = $2,
+            selling_price = $3,
+            barcode = $4
+        WHERE id = $5 AND user_id = $6
         RETURNING
           id,
           user_id,
           name,
-          price,
+          purchase_price,
+          selling_price,
           stock_quantity,
           barcode`,
       [
-        name.trim(),
-        numericPrice,
+        normalizedName,
+        numericPurchasePrice,
+        numericSellingPrice,
         normalizedBarcode,
         productId,
         USER_ID,

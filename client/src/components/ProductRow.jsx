@@ -6,7 +6,8 @@ function ProductRow({
     onEditProduct,
     onOpenStockHistory,
 }) {
-    const formattedPrice = Number(product.price).toFixed(2);
+    const formattedPurchasePrice = Number(product.purchase_price).toFixed(2);
+    const formattedSellingPrice = Number(product.selling_price).toFixed(2);
 
     const stockQuantity = Number(product.stock_quantity);
 
@@ -41,7 +42,11 @@ function ProductRow({
             </td>
 
             <td>
-                {formattedPrice}
+                {formattedPurchasePrice}
+            </td>
+
+            <td>
+                {formattedSellingPrice}
             </td>
 
             <td>

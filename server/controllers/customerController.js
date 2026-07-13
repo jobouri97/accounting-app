@@ -221,6 +221,8 @@ export async function updateCustomer(req, res) {
 }
 
 export async function deleteCustomer(req, res) {
+  let client;
+
   try {
     const customerId = parseCustomerId(req.params.id);
 
@@ -230,22 +232,46 @@ export async function deleteCustomer(req, res) {
       });
     }
 
-    const result = await db.query(
-      `DELETE FROM customers
+    client = await db.connect();
+    await client.query("BEGIN");
+
+    const customerResult = await client.query(
+      `SELECT id FROM customers
        WHERE id = $1 AND user_id = $2
-       RETURNING id`,
+       FOR UPDATE`,
       [customerId, USER_ID]
     );
 
-    if (result.rows.length === 0) {
+    if (customerResult.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ message: "Customer not found" });
     }
 
+    const invoiceResult = await client.query(
+      `SELECT id FROM invoices WHERE customer_id = $1 AND user_id = $2 LIMIT 1`,
+      [customerId, USER_ID]
+    );
+
+    if (invoiceResult.rows.length > 0) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        message: "Customer cannot be deleted because it has invoices",
+      });
+    }
+
+    await client.query(
+      `DELETE FROM customers WHERE id = $1 AND user_id = $2`,
+      [customerId, USER_ID]
+    );
+    await client.query("COMMIT");
+
     res.status(200).json({
       message: "Customer deleted successfully",
-      customerId: result.rows[0].id,
+      customerId,
     });
   } catch (error) {
+    if (client) await client.query("ROLLBACK");
+
     if (error.code === "23503") {
       return res.status(409).json({
         message: "Customer cannot be deleted because it is in use",
@@ -254,5 +280,7 @@ export async function deleteCustomer(req, res) {
 
     console.error("Delete customer error:", error);
     res.status(500).json({ message: "Failed to delete customer" });
+  } finally {
+    client?.release();
   }
 }

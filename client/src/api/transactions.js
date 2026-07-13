@@ -14,3 +14,9 @@ export const getTransactions = (page = 1, customerId = null) =>
 
 export const createTransaction = (transaction) =>
   api.post("/", transaction);
+
+export const updateTransaction = (id, transaction) =>
+  api.put(`/${id}`, transaction);
+
+export const deleteTransaction = (id) =>
+  api.delete(`/${id}`);

@@ -6,6 +6,7 @@ function StockHistoryForm({
     products,
     onAddStock,
     lockedProductId = null,
+    onProductChange,
 }) {
     const initialState = {
         product_id: lockedProductId ?? "",
@@ -70,6 +71,7 @@ function StockHistoryForm({
             ...previousForm,
             product_id: product.id,
         }));
+        onProductChange(product.id);
     }
 
     async function handleSubmit(event) {
@@ -102,15 +104,11 @@ function StockHistoryForm({
 
         if (result.success) {
             setForm({
-                product_id: lockedProductId ?? "",
+                product_id: form.product_id,
                 adjustmentType: "add",
                 quantity: "",
                 description: "",
             });
-
-            if (!lockedProductId) {
-                setProductSearch("");
-            }
         } else {
             setFormError(result.message);
         }
@@ -325,9 +323,9 @@ function StockHistoryForm({
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="description">Description</label>
+                    <label htmlFor="description">Notes</label>
 
-                    <textarea
+                    <input
                         id="description"
                         name="description"
                         value={form.description}
