@@ -1,12 +1,7 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "http://localhost:3000/api/transactions",
-  withCredentials: true,
-});
+import api from "./client";
 
 export const getTransactions = (page = 1, customerId = null) =>
-  api.get("/", {
+  api.get("/transactions", {
     params: {
       page,
       ...(customerId ? { customer_id: customerId } : {}),
@@ -14,10 +9,10 @@ export const getTransactions = (page = 1, customerId = null) =>
   });
 
 export const createTransaction = (transaction) =>
-  api.post("/", transaction);
+  api.post("/transactions", transaction);
 
 export const updateTransaction = (id, transaction) =>
-  api.put(`/${id}`, transaction);
+  api.put(`/transactions/${id}`, transaction);
 
 export const deleteTransaction = (id) =>
-  api.delete(`/${id}`);
+  api.delete(`/transactions/${id}`);

@@ -1,11 +1,7 @@
-import axios from "axios";
+import api from "./client";
 
-const api = axios.create({
-  baseURL: "http://localhost:3000/api/auth",
-  withCredentials: true,
-});
-
-export const registerAccount = (account) => api.post("/register", account);
-export const loginAccount = (credentials) => api.post("/login", credentials);
-export const logoutAccount = () => api.post("/logout");
-export const getCurrentAccount = () => api.get("/me");
+export const registerAccount = (account) => api.post("/auth/register", account);
+export const loginAccount = (credentials) => api.post("/auth/login", credentials);
+export const loginWithGoogle = (credential) => api.post("/auth/google", { credential });
+export const logoutAccount = () => api.post("/auth/logout");
+export const getCurrentAccount = () => api.get("/auth/me");

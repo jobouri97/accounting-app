@@ -1,8 +1,10 @@
 import bcrypt from "bcrypt";
+import { OAuth2Client } from "google-auth-library";
 
 import db from "../db/index.js";
 
 const PASSWORD_SALT_ROUNDS = 12;
+const googleClient = new OAuth2Client();
 
 function validateCredentials(body, includeName) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -133,6 +135,101 @@ export async function login(req, res) {
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Failed to log in" });
+  }
+}
+
+export async function googleLogin(req, res) {
+  const googleClientId = process.env.GOOGLE_CLIENT_ID;
+  if (!googleClientId) {
+    return res.status(503).json({ message: "Google login is not configured" });
+  }
+
+  if (typeof req.body?.credential !== "string" || !req.body.credential) {
+    return res.status(400).json({ message: "Google credential is required" });
+  }
+
+  let profile;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: req.body.credential,
+      audience: googleClientId,
+    });
+    profile = ticket.getPayload();
+
+    if (!profile?.sub || !profile.email || profile.email_verified !== true) {
+      return res.status(401).json({ message: "Google account email could not be verified" });
+    }
+  } catch (error) {
+    console.warn("Google credential verification failed:", error.message);
+    return res.status(401).json({ message: "Google login failed" });
+  }
+
+  const email = profile.email.trim().toLowerCase();
+  const name = (profile.name?.trim() || email.split("@")[0]).slice(0, 100);
+
+  let client;
+  let user;
+  try {
+    client = await db.connect();
+    await client.query("BEGIN");
+
+    let result = await client.query(
+      `SELECT id, name, email, created_at
+       FROM users
+       WHERE google_sub = $1
+       LIMIT 1`,
+      [profile.sub]
+    );
+
+    if (result.rows.length === 0) {
+      result = await client.query(
+        `SELECT id, name, email, created_at
+         FROM users
+         WHERE LOWER(email) = LOWER($1)
+         LIMIT 1
+         FOR UPDATE`,
+        [email]
+      );
+
+      if (result.rows.length > 0) {
+        result = await client.query(
+          `UPDATE users
+           SET google_sub = $1
+           WHERE id = $2
+           RETURNING id, name, email, created_at`,
+          [profile.sub, result.rows[0].id]
+        );
+      } else {
+        result = await client.query(
+          `INSERT INTO users (name, email, password_hash, google_sub, created_at)
+           VALUES ($1, $2, NULL, $3, NOW())
+           RETURNING id, name, email, created_at`,
+          [name, email, profile.sub]
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+    user = result.rows[0];
+  } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
+
+    if (error.code === "23505") {
+      return res.status(409).json({ message: "This Google account is linked to another user" });
+    }
+
+    console.error("Google account database error:", error);
+    return res.status(500).json({ message: "Failed to save Google account" });
+  } finally {
+    client?.release();
+  }
+
+  try {
+    await startSession(req, user.id);
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("Google session error:", error);
+    return res.status(500).json({ message: "Failed to start login session" });
   }
 }
 

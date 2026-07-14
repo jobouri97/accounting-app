@@ -18,9 +18,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PgSession = connectPgSimple(session);
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 if (!process.env.SESSION_SECRET) {
   throw new Error("SESSION_SECRET is required");
+}
+
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
 }
 
 app.use(express.json());
@@ -33,7 +41,10 @@ app.get("/", (req, res) => {
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Origin is not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -51,7 +62,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },

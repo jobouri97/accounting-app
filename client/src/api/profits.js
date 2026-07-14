@@ -1,12 +1,7 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "http://localhost:3000/api/profits",
-  withCredentials: true,
-});
+import api from "./client";
 
 export const getProfits = (page = 1, startDate = "", endDate = "") =>
-  api.get("/", {
+  api.get("/profits", {
     params: {
       page,
       ...(startDate ? { start_date: startDate } : {}),

@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { loginAccount, registerAccount } from "../api/auth";
+import { loginAccount, loginWithGoogle, registerAccount } from "../api/auth";
 import "./Auth.css";
+
+const GOOGLE_SCRIPT_ID = "google-identity-services";
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function Auth({ onAuthenticated }) {
   const [mode, setMode] = useState("login");
@@ -11,6 +14,69 @@ function Auth({ onAuthenticated }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const googleButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!googleClientId || !googleButtonRef.current) return undefined;
+
+    let isActive = true;
+
+    function renderGoogleButton() {
+      if (!isActive || !window.google || !googleButtonRef.current) return;
+
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: async ({ credential }) => {
+          if (!credential) return;
+
+          try {
+            setError("");
+            setIsSubmitting(true);
+            const response = await loginWithGoogle(credential);
+            onAuthenticated(response.data.user);
+          } catch (requestError) {
+            setError(requestError.response?.data?.message || "Google login failed. Please try again.");
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      });
+
+      googleButtonRef.current.replaceChildren();
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "pill",
+        logo_alignment: "left",
+        width: googleButtonRef.current.clientWidth,
+      });
+    }
+
+    const existingScript = document.getElementById(GOOGLE_SCRIPT_ID);
+    if (window.google) {
+      renderGoogleButton();
+    } else if (existingScript) {
+      existingScript.addEventListener("load", renderGoogleButton, { once: true });
+    } else {
+      const script = document.createElement("script");
+      script.id = GOOGLE_SCRIPT_ID;
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.addEventListener("load", renderGoogleButton, { once: true });
+      script.addEventListener("error", () => {
+        if (isActive) setError("Google login could not be loaded.");
+      }, { once: true });
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      isActive = false;
+      existingScript?.removeEventListener("load", renderGoogleButton);
+    };
+  }, [onAuthenticated]);
 
   function switchMode(nextMode) {
     setMode(nextMode);
@@ -85,6 +151,13 @@ function Auth({ onAuthenticated }) {
           </div>
 
           {error && <div className="auth-error" role="alert">{error}</div>}
+
+          {googleClientId && (
+            <>
+              <div className="auth-google-button" ref={googleButtonRef} />
+              <div className="auth-divider"><span>or use email</span></div>
+            </>
+          )}
 
           <form className="auth-form" onSubmit={handleSubmit}>
             {mode === "register" && (

@@ -1,15 +1,10 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "http://localhost:3000/api/stock-history",
-  withCredentials: true,
-});
+import api from "./client";
 
 export const getStockHistory = (
   page = 1,
   productId = null
 ) =>
-  api.get("/", {
+  api.get("/stock-history", {
     params: {
       page,
       ...(productId ? { product_id: productId } : {}),
@@ -17,13 +12,13 @@ export const getStockHistory = (
   });
 
 export const getStockHistoryRecord = (id) =>
-  api.get(`/${id}`);
+  api.get(`/stock-history/${id}`);
 
 export const createStockHistory = (stockData) =>
-  api.post("/", stockData);
+  api.post("/stock-history", stockData);
 
 export const updateStockHistory = (id, stockData) =>
-  api.put(`/${id}`, stockData);
+  api.put(`/stock-history/${id}`, stockData);
 
 export const deleteStockHistory = (id) =>
-  api.delete(`/${id}`);
+  api.delete(`/stock-history/${id}`);
