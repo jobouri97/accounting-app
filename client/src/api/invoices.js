@@ -2,6 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:3000/api/invoices",
+  withCredentials: true,
 });
 
 export const getInvoices = (page = 1, customerId = null, invoiceId = null) =>

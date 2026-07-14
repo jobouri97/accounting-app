@@ -1,17 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { getCurrentAccount, logoutAccount } from "./api/auth";
 import Products from "./pages/Products";
 import StockHistory from "./pages/StockHistory";
 import Customers from "./pages/Customers";
 import Transactions from "./pages/Transactions";
 import Invoices from "./pages/Invoices";
 import Profits from "./pages/Profits";
+import Auth from "./pages/Auth";
 import "./App.css";
 
 function App() {
+  const [account, setAccount] = useState(null);
+  const [isCheckingAccount, setIsCheckingAccount] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [currentPage, setCurrentPage] = useState("products");
   const [stockHistoryProductId, setStockHistoryProductId] = useState(null);
   const [transactionCustomerId, setTransactionCustomerId] = useState(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    getCurrentAccount()
+      .then((response) => {
+        if (isActive) setAccount(response.data.user);
+      })
+      .catch(() => {
+        if (isActive) setAccount(null);
+      })
+      .finally(() => {
+        if (isActive) setIsCheckingAccount(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  async function handleLogout() {
+    try {
+      setIsLoggingOut(true);
+      await logoutAccount();
+      setAccount(null);
+      setCurrentPage("products");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
 
   function openProductStockHistory(productId) {
     setStockHistoryProductId(productId);
@@ -33,6 +68,19 @@ function App() {
     setCurrentPage("transactions");
   }
 
+  if (isCheckingAccount) {
+    return (
+      <main className="app-loading-screen">
+        <span className="app-brand-mark" aria-hidden="true">A</span>
+        <p>Loading your workspace...</p>
+      </main>
+    );
+  }
+
+  if (!account) {
+    return <Auth onAuthenticated={setAccount} />;
+  }
+
   return (
     <>
       <header className="app-header">
@@ -42,7 +90,7 @@ function App() {
 
             <div>
               <strong>Accounting</strong>
-              <span>Inventory workspace</span>
+              <span>{account.name}</span>
             </div>
           </div>
 
@@ -117,6 +165,18 @@ function App() {
                 <path d="M4 19V9M10 19V5M16 19v-7M22 19V3" />
               </svg>
               Profit
+            </button>
+
+            <button
+              type="button"
+              className="app-logout-button"
+              disabled={isLoggingOut}
+              onClick={handleLogout}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 5H5v14h5M14 8l4 4-4 4M9 12h9" />
+              </svg>
+              {isLoggingOut ? "Leaving..." : "Logout"}
             </button>
           </nav>
         </div>

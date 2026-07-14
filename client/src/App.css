@@ -9,6 +9,17 @@
   backdrop-filter: blur(14px);
 }
 
+.app-loading-screen {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  color: #64748b;
+  font-weight: 700;
+}
+
 .app-header-inner {
   display: flex;
   width: 100%;
@@ -112,6 +123,20 @@
   background-color: white;
   box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
   color: #2563eb;
+}
+
+.app-nav .app-logout-button {
+  color: #b91c1c;
+}
+
+.app-nav .app-logout-button:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.app-nav .app-logout-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .app-nav button:focus-visible {

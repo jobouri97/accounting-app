@@ -2,6 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:3000/api/products",
+  withCredentials: true,
 });
 
 export const getProducts = (page = 1, search = "") =>

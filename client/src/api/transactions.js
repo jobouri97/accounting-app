@@ -2,6 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:3000/api/transactions",
+  withCredentials: true,
 });
 
 export const getTransactions = (page = 1, customerId = null) =>

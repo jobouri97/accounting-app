@@ -1,6 +1,7 @@
 import db from "../db/index.js";
+import { currentUserId } from "../middleware/auth.js";
 
-const USER_ID = 1;
+const USER_ID = currentUserId;
 const PAGE_SIZE = 100;
 
 function parsePositiveInteger(value) {

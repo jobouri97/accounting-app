@@ -2,6 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:3000/api/customers",
+  withCredentials: true,
 });
 
 export const getCustomers = (page = 1, search = "") =>
