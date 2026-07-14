@@ -62,12 +62,30 @@
 
 .app-nav {
   display: flex;
+  max-width: 100%;
   align-items: center;
   gap: 6px;
   padding: 5px;
   border: 1px solid #e5e7eb;
   border-radius: 13px;
   background-color: #f8fafc;
+}
+
+@media (max-width: 900px) {
+  .app-header-inner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .app-nav {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .app-nav button {
+    flex-shrink: 0;
+  }
 }
 
 .app-nav button {
@@ -114,7 +132,7 @@
 @media (max-width: 600px) {
   .app-header-inner {
     min-height: 64px;
-    gap: 12px;
+    gap: 8px;
     padding: 8px 12px;
   }
 
@@ -129,8 +147,7 @@
   }
 
   .app-nav {
-    flex: 1;
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 
   .app-nav button {

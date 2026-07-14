@@ -67,9 +67,19 @@ function StockHistory({ initialProductId = null }) {
 
     const loadProducts = useCallback(async () => {
         try {
-            const response = await getProducts(1, "");
+            const firstResponse = await getProducts(1, "");
+            const allProducts = [...firstResponse.data.products];
 
-            setProducts(response.data.products);
+            for (
+                let page = 2;
+                page <= firstResponse.data.pagination.totalPages;
+                page += 1
+            ) {
+                const response = await getProducts(page, "");
+                allProducts.push(...response.data.products);
+            }
+
+            setProducts(allProducts);
         } catch (error) {
             console.error("Error loading products:", error);
 

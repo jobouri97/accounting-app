@@ -46,6 +46,12 @@ function ProductForm({
         }));
     }
 
+    function handleBarcodeKeyDown(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+        }
+    }
+
     async function handleSubmit(event) {
         event.preventDefault();
 
@@ -166,6 +172,7 @@ function ProductForm({
                         name="barcode"
                         value={product.barcode}
                         onChange={handleChange}
+                        onKeyDown={handleBarcodeKeyDown}
                         placeholder="Example: 0123456789"
                         maxLength="100"
                         autoComplete="off"

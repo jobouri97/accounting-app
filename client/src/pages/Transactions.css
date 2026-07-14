@@ -122,6 +122,19 @@
 .transaction-delete-button:hover {
   background: #fecaca;
 }
+.invoice-managed-transaction {
+  display: inline-flex;
+  max-width: 150px;
+  padding: 6px 9px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
 @media (max-width: 600px) {
   .transactions-page {
     padding: 16px 12px;

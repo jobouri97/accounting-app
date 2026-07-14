@@ -74,6 +74,16 @@ function StockHistoryForm({
         onProductChange(product.id);
     }
 
+    function handleAllProductsSelect() {
+        setProductSearch("");
+        setIsProductListOpen(false);
+        setForm((previousForm) => ({
+            ...previousForm,
+            product_id: "",
+        }));
+        onProductChange(null);
+    }
+
     async function handleSubmit(event) {
         event.preventDefault();
         setFormError("");
@@ -181,6 +191,22 @@ function StockHistoryForm({
                                     className="product-options"
                                     role="listbox"
                                 >
+                                    <button
+                                        type="button"
+                                        className="product-option"
+                                        role="option"
+                                        aria-selected={!form.product_id}
+                                        onMouseDown={(event) => {
+                                            event.preventDefault();
+                                            handleAllProductsSelect();
+                                        }}
+                                    >
+                                        <span>
+                                            <strong>All Products</strong>
+                                            <small>Show every stock record</small>
+                                        </span>
+                                    </button>
+
                                     {filteredProducts.length === 0 ? (
                                         <div className="product-option-empty">
                                             No products found

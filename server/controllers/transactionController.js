@@ -82,6 +82,10 @@ export async function getAllTransactions(req, res) {
       customerCondition = `AND transactions.customer_id = $${values.length}`;
     }
 
+    const balancePartition = customerId
+      ? "PARTITION BY transactions.customer_id"
+      : "";
+
     const limitPosition = values.length + 1;
     const offsetPosition = values.length + 2;
     const offset = (page - 1) * PAGE_SIZE;
@@ -95,8 +99,9 @@ export async function getAllTransactions(req, res) {
                 transactions.debit,
                 transactions.credit,
                 transactions.note,
+                transactions.invoice_id,
                 SUM(transactions.credit - transactions.debit) OVER (
-                  PARTITION BY transactions.customer_id
+                  ${balancePartition}
                   ORDER BY transactions.created_at, transactions.id
                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
                 ) AS balance,
@@ -156,6 +161,7 @@ export async function getTransactionById(req, res) {
               transactions.debit,
               transactions.credit,
               transactions.note,
+              transactions.invoice_id,
               customers.customer_name
        FROM transactions
        INNER JOIN customers
@@ -257,7 +263,7 @@ export async function updateTransaction(req, res) {
     await client.query("BEGIN");
 
     const existingResult = await client.query(
-      `SELECT id, customer_id, debit, credit, note
+      `SELECT id, customer_id, debit, credit, note, invoice_id
        FROM transactions
        WHERE id = $1 AND user_id = $2
        FOR UPDATE`,
@@ -270,6 +276,13 @@ export async function updateTransaction(req, res) {
     }
 
     const existing = existingResult.rows[0];
+
+    if (existing.invoice_id) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        message: "Invoice transactions can only be updated from the Invoices page",
+      });
+    }
     
     const debitResult = parseAmount(
       req.body.debit === undefined ? existing.debit : req.body.debit,
@@ -350,7 +363,7 @@ export async function deleteTransaction(req, res) {
   try {
     await client.query("BEGIN");
     const result = await client.query(
-      `SELECT id, customer_id, debit, credit
+      `SELECT id, customer_id, debit, credit, invoice_id
        FROM transactions
        WHERE id = $1 AND user_id = $2
        FOR UPDATE`,
@@ -363,6 +376,14 @@ export async function deleteTransaction(req, res) {
     }
 
     const transaction = result.rows[0];
+
+    if (transaction.invoice_id) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        message: "Invoice transactions can only be deleted from the Invoices page",
+      });
+    }
+
     const balanceResult = await client.query(
       `UPDATE customers
        SET balance = balance + $1 - $2

@@ -4,6 +4,8 @@ import Products from "./pages/Products";
 import StockHistory from "./pages/StockHistory";
 import Customers from "./pages/Customers";
 import Transactions from "./pages/Transactions";
+import Invoices from "./pages/Invoices";
+import Profits from "./pages/Profits";
 import "./App.css";
 
 function App() {
@@ -84,6 +86,18 @@ function App() {
 
             <button
               type="button"
+              className={currentPage === "invoices" ? "active" : ""}
+              onClick={() => setCurrentPage("invoices")}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+                <path d="M9 8h6M9 12h6M9 16h3" />
+              </svg>
+              Invoices
+            </button>
+
+            <button
+              type="button"
               className={currentPage === "transactions" ? "active" : ""}
               onClick={openAllTransactions}
             >
@@ -92,6 +106,17 @@ function App() {
                 <path d="m17 16 3 2-3 2" />
               </svg>
               Transactions
+            </button>
+
+            <button
+              type="button"
+              className={currentPage === "profits" ? "active" : ""}
+              onClick={() => setCurrentPage("profits")}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 19V9M10 19V5M16 19v-7M22 19V3" />
+              </svg>
+              Profit
             </button>
           </nav>
         </div>
@@ -107,6 +132,10 @@ function App() {
         />
       ) : currentPage === "customers" ? (
         <Customers onOpenTransactions={openCustomerTransactions} />
+      ) : currentPage === "invoices" ? (
+        <Invoices />
+      ) : currentPage === "profits" ? (
+        <Profits />
       ) : (
         <Transactions
           key={transactionCustomerId ?? "all-transactions"}

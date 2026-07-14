@@ -35,10 +35,18 @@ function roundMoney(amount) {
 }
 
 function validateInvoice(body) {
-  const customerId = parsePositiveInteger(body.customer_id);
-  if (!customerId) {
+  const hasCustomerId =
+    body.customer_id !== undefined &&
+    body.customer_id !== null &&
+    body.customer_id !== "" &&
+    Number(body.customer_id) !== 0;
+  const customerId = hasCustomerId ? parsePositiveInteger(body.customer_id) : null;
+
+  if (hasCustomerId && !customerId) {
     return { error: "Customer ID must be a positive integer" };
   }
+
+  const customerType = customerId ? "specified" : "passer";
 
   if (!Array.isArray(body.items) || body.items.length === 0) {
     return { error: "Invoice must contain at least one item" };
@@ -81,7 +89,7 @@ function validateInvoice(body) {
     items.push({ productId, quantity, discount: discountResult.amount });
   }
 
-  return { invoice: { customerId, items } };
+  return { invoice: { customerType, customerId, items } };
 }
 
 function buildInvoiceItems(items, products) {
@@ -205,11 +213,86 @@ async function applyStockChanges(client, invoiceId, changes, description) {
   }
 }
 
+async function syncInvoiceTransaction(
+  client,
+  invoiceId,
+  customerId,
+  total,
+  createdAt = null
+) {
+  const existingResult = await client.query(
+    `SELECT id, customer_id, debit, credit
+     FROM transactions
+     WHERE invoice_id = $1 AND user_id = $2
+     FOR UPDATE`,
+    [invoiceId, USER_ID]
+  );
+  const existingTransaction = existingResult.rows[0] || null;
+
+  if (existingTransaction) {
+    await client.query(
+      `UPDATE customers
+       SET balance = balance + $1 - $2
+       WHERE id = $3 AND user_id = $4`,
+      [
+        existingTransaction.debit,
+        existingTransaction.credit,
+        existingTransaction.customer_id,
+        USER_ID,
+      ]
+    );
+  }
+
+  if (!customerId) {
+    if (existingTransaction) {
+      await client.query(
+        `DELETE FROM transactions WHERE id = $1 AND user_id = $2`,
+        [existingTransaction.id, USER_ID]
+      );
+    }
+    return null;
+  }
+
+  let transactionResult;
+  if (existingTransaction) {
+    transactionResult = await client.query(
+      `UPDATE transactions
+       SET customer_id = $1,
+           debit = $2,
+           credit = 0,
+           note = $3
+       WHERE id = $4 AND user_id = $5
+       RETURNING id, user_id, customer_id, created_at, debit, credit, note, invoice_id`,
+      [customerId, total, `Invoice #${invoiceId}`, existingTransaction.id, USER_ID]
+    );
+  } else {
+    transactionResult = await client.query(
+      `INSERT INTO transactions
+         (user_id, customer_id, created_at, debit, credit, note, invoice_id)
+       VALUES ($1, $2, COALESCE($3, NOW()), $4, 0, $5, $6)
+       RETURNING id, user_id, customer_id, created_at, debit, credit, note, invoice_id`,
+      [USER_ID, customerId, createdAt, total, `Invoice #${invoiceId}`, invoiceId]
+    );
+  }
+
+  await client.query(
+    `UPDATE customers
+     SET balance = balance - $1
+     WHERE id = $2 AND user_id = $3`,
+    [total, customerId, USER_ID]
+  );
+
+  return transactionResult.rows[0];
+}
+
 export async function getAllInvoices(req, res) {
   try {
     const page = Number(req.query.page ?? 1);
     const customerId = req.query.customer_id
       ? parsePositiveInteger(req.query.customer_id)
+      : null;
+    const invoiceId = req.query.invoice_id
+      ? parsePositiveInteger(req.query.invoice_id)
       : null;
 
     if (!Number.isInteger(page) || page < 1) {
@@ -220,13 +303,26 @@ export async function getAllInvoices(req, res) {
       return res.status(400).json({ message: "Customer ID must be a positive integer" });
     }
 
+    if (req.query.invoice_id && !invoiceId) {
+      return res.status(400).json({ message: "Invoice number must be a positive integer" });
+    }
+
     const values = [USER_ID];
-    let customerCondition = "";
+    const filterConditions = [];
 
     if (customerId) {
       values.push(customerId);
-      customerCondition = `AND invoices.customer_id = $${values.length}`;
+      filterConditions.push(`invoices.customer_id = $${values.length}`);
     }
+
+    if (invoiceId) {
+      values.push(invoiceId);
+      filterConditions.push(`invoices.id = $${values.length}`);
+    }
+
+    const filterCondition = filterConditions.length
+      ? `AND ${filterConditions.join(" AND ")}`
+      : "";
 
     const limitPosition = values.length + 1;
     const offsetPosition = values.length + 2;
@@ -242,12 +338,12 @@ export async function getAllInvoices(req, res) {
                 customers.customer_name,
                 COUNT(invoice_items.id)::int AS item_count
          FROM invoices
-         INNER JOIN customers
+         LEFT JOIN customers
            ON customers.id = invoices.customer_id
           AND customers.user_id = invoices.user_id
          LEFT JOIN invoice_items ON invoice_items.invoice_id = invoices.id
          WHERE invoices.user_id = $1
-           ${customerCondition}
+           ${filterCondition}
          GROUP BY invoices.id, customers.customer_name
          ORDER BY invoices.created_at DESC, invoices.id DESC
          LIMIT $${limitPosition} OFFSET $${offsetPosition}`,
@@ -257,7 +353,7 @@ export async function getAllInvoices(req, res) {
         `SELECT COUNT(*)::int AS total
          FROM invoices
          WHERE user_id = $1
-           ${customerCondition}`,
+           ${filterCondition}`,
         values
       ),
     ]);
@@ -297,7 +393,7 @@ export async function getInvoiceById(req, res) {
               invoices.created_at,
               customers.customer_name
        FROM invoices
-       INNER JOIN customers
+       LEFT JOIN customers
          ON customers.id = invoices.customer_id
         AND customers.user_id = invoices.user_id
        WHERE invoices.id = $1 AND invoices.user_id = $2`,
@@ -349,18 +445,24 @@ export async function createInvoice(req, res) {
     client = await db.connect();
     await client.query("BEGIN");
 
-    const { customerId, items } = validation.invoice;
-    const customerResult = await client.query(
-      `SELECT id, customer_name
-       FROM customers
-       WHERE id = $1 AND user_id = $2
-       FOR UPDATE`,
-      [customerId, USER_ID]
-    );
+    const { customerType, customerId, items } = validation.invoice;
+    let customerName = null;
 
-    if (customerResult.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ message: "Customer not found" });
+    if (customerType === "specified") {
+      const customerResult = await client.query(
+        `SELECT id, customer_name
+         FROM customers
+         WHERE id = $1 AND user_id = $2
+         FOR UPDATE`,
+        [customerId, USER_ID]
+      );
+
+      if (customerResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ message: "Customer not found" });
+      }
+
+      customerName = customerResult.rows[0].customer_name;
     }
 
     const products = await lockProducts(client, items.map((item) => item.productId));
@@ -378,6 +480,14 @@ export async function createInvoice(req, res) {
       [USER_ID, customerId, builtInvoice.total]
     );
     const invoice = invoiceResult.rows[0];
+
+    await syncInvoiceTransaction(
+      client,
+      invoice.id,
+      customerId,
+      builtInvoice.total,
+      invoice.created_at
+    );
 
     const insertedItems = await insertInvoiceItems(
       client,
@@ -398,7 +508,7 @@ export async function createInvoice(req, res) {
     res.status(201).json({
       invoice: {
         ...invoice,
-        customer_name: customerResult.rows[0].customer_name,
+        customer_name: customerName,
       },
       items: insertedItems,
     });
@@ -428,7 +538,10 @@ export async function updateInvoice(req, res) {
     await client.query("BEGIN");
 
     const existingInvoiceResult = await client.query(
-      `SELECT id FROM invoices WHERE id = $1 AND user_id = $2 FOR UPDATE`,
+      `SELECT id, customer_id
+       FROM invoices
+       WHERE id = $1 AND user_id = $2
+       FOR UPDATE`,
       [invoiceId, USER_ID]
     );
     if (existingInvoiceResult.rows.length === 0) {
@@ -436,18 +549,32 @@ export async function updateInvoice(req, res) {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
-    const { customerId, items } = validation.invoice;
-    const customerResult = await client.query(
-      `SELECT id, customer_name
-       FROM customers
-       WHERE id = $1 AND user_id = $2
-       FOR UPDATE`,
-      [customerId, USER_ID]
+    const { customerType, customerId, items } = validation.invoice;
+    const customerIds = [
+      ...new Set([
+        existingInvoiceResult.rows[0].customer_id,
+        customerId,
+      ].filter(Boolean).map(Number)),
+    ].sort((first, second) => first - second);
+    const customersResult = customerIds.length > 0
+      ? await client.query(
+          `SELECT id, customer_name
+           FROM customers
+           WHERE id = ANY($1::int[]) AND user_id = $2
+           ORDER BY id
+           FOR UPDATE`,
+          [customerIds, USER_ID]
+        )
+      : { rows: [] };
+    const selectedCustomer = customersResult.rows.find(
+      (customer) => Number(customer.id) === customerId
     );
-    if (customerResult.rows.length === 0) {
+
+    if (customerType === "specified" && !selectedCustomer) {
       await client.query("ROLLBACK");
       return res.status(404).json({ message: "Customer not found" });
     }
+    const customerName = selectedCustomer?.customer_name || null;
 
     const oldItemsResult = await client.query(
       `SELECT product_id, quantity FROM invoice_items WHERE invoice_id = $1`,
@@ -497,6 +624,12 @@ export async function updateInvoice(req, res) {
        RETURNING id, user_id, customer_id, total, created_at`,
       [customerId, builtInvoice.total, invoiceId, USER_ID]
     );
+    await syncInvoiceTransaction(
+      client,
+      invoiceId,
+      customerId,
+      builtInvoice.total
+    );
     const insertedItems = await insertInvoiceItems(
       client,
       invoiceId,
@@ -507,7 +640,7 @@ export async function updateInvoice(req, res) {
     res.status(200).json({
       invoice: {
         ...invoiceResult.rows[0],
-        customer_name: customerResult.rows[0].customer_name,
+        customer_name: customerName,
       },
       items: insertedItems,
     });
@@ -532,12 +665,25 @@ export async function deleteInvoice(req, res) {
     await client.query("BEGIN");
 
     const invoiceResult = await client.query(
-      `SELECT id FROM invoices WHERE id = $1 AND user_id = $2 FOR UPDATE`,
+      `SELECT id, customer_id
+       FROM invoices
+       WHERE id = $1 AND user_id = $2
+       FOR UPDATE`,
       [invoiceId, USER_ID]
     );
     if (invoiceResult.rows.length === 0) {
       await client.query("ROLLBACK");
       return res.status(404).json({ message: "Invoice not found" });
+    }
+
+    if (invoiceResult.rows[0].customer_id) {
+      await client.query(
+        `SELECT id
+         FROM customers
+         WHERE id = $1 AND user_id = $2
+         FOR UPDATE`,
+        [invoiceResult.rows[0].customer_id, USER_ID]
+      );
     }
 
     const itemsResult = await client.query(
@@ -563,6 +709,7 @@ export async function deleteInvoice(req, res) {
       })),
       "Invoice deleted"
     );
+    await syncInvoiceTransaction(client, invoiceId, null, 0);
     await client.query(`DELETE FROM invoice_items WHERE invoice_id = $1`, [invoiceId]);
     await client.query(`DELETE FROM invoices WHERE id = $1 AND user_id = $2`, [invoiceId, USER_ID]);
 

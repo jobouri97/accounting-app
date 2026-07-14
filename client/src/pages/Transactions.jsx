@@ -206,14 +206,20 @@ function Transactions({ initialCustomerId = null }) {
                       <td>{transaction.note || "—"}</td>
                       <td>{new Date(transaction.created_at).toLocaleString()}</td>
                       <td>
-                        <div className="transaction-actions">
-                          <button type="button" className="transaction-edit-button" onClick={() => handleEditTransaction(transaction)}>
-                            Edit
-                          </button>
-                          <button type="button" className="transaction-delete-button" onClick={() => handleDeleteTransaction(transaction.id)}>
-                            Delete
-                          </button>
-                        </div>
+                        {transaction.invoice_id ? (
+                          <span className="invoice-managed-transaction">
+                            Invoice #{transaction.invoice_id}
+                          </span>
+                        ) : (
+                          <div className="transaction-actions">
+                            <button type="button" className="transaction-edit-button" onClick={() => handleEditTransaction(transaction)}>
+                              Edit
+                            </button>
+                            <button type="button" className="transaction-delete-button" onClick={() => handleDeleteTransaction(transaction.id)}>
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
