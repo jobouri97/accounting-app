@@ -9,6 +9,7 @@ import {
   updateInvoice,
 } from "../api/invoices";
 import { getProducts } from "../api/products";
+import DismissibleError from "../components/DismissibleError";
 import InvoiceForm from "../components/InvoiceForm";
 import Pagination from "../components/Pagination";
 import TableStatus from "../components/TableStatus";
@@ -235,7 +236,7 @@ function Invoices() {
           </div>
         </header>
 
-        {error && <div className="error-message">{error}</div>}
+        <DismissibleError message={error} onDismiss={() => setError("")} />
 
         <InvoiceForm
           key={editingInvoice ? `edit-${editingInvoice.invoice.id}` : "new-invoice"}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getProfits } from "../api/profits";
 import DatePicker from "../components/DatePicker";
+import DismissibleError from "../components/DismissibleError";
 import Pagination from "../components/Pagination";
 import TableStatus from "../components/TableStatus";
 import "./Profits.css";
@@ -107,7 +108,7 @@ function Profits() {
           </div>
         </header>
 
-        {error && <div className="error-message">{error}</div>}
+        <DismissibleError message={error} onDismiss={() => setError("")} />
 
         <section className="profits-filters" aria-label="Profit filters">
           <DatePicker

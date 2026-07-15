@@ -8,6 +8,7 @@ import {
   updateTransaction,
 } from "../api/transactions";
 import Pagination from "../components/Pagination";
+import DismissibleError from "../components/DismissibleError";
 import TableStatus from "../components/TableStatus";
 import TransactionForm from "../components/TransactionForm";
 import "./Transactions.css";
@@ -168,7 +169,7 @@ function Transactions({ initialCustomerId = null }) {
           </div>
         </header>
 
-        {error && <div className="error-message">{error}</div>}
+        <DismissibleError message={error} onDismiss={() => setError("")} />
 
         <TransactionForm
           key={editingTransaction

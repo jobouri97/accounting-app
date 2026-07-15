@@ -13,6 +13,7 @@ import {
 
 import ProductForm from "../components/ProductForm";
 import ProductTable from "../components/ProductTable";
+import DismissibleError from "../components/DismissibleError";
 import SearchBox from "../components/SearchBox";
 import TableStatus from "../components/TableStatus";
 
@@ -204,9 +205,7 @@ function Products({ onOpenStockHistory }) {
           </div>
         </header>
 
-        {error && (
-          <div className="error-message">{error}</div>
-        )}
+        <DismissibleError message={error} onDismiss={() => setError("")} />
 
         <ProductForm
           onAddProduct={handleAddProduct}

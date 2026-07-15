@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getDashboard } from "../api/dashboard";
+import DismissibleError from "../components/DismissibleError";
 import "./Dashboard.css";
 
 const emptyDashboard = {
@@ -132,7 +133,7 @@ function Dashboard({ account, onNavigate }) {
         <div className="dashboard-error">
           <Icon name="alert" />
           <h2>We couldn’t load the dashboard</h2>
-          <p>{error}</p>
+          <DismissibleError message={error} onDismiss={() => setError("")} />
           <button type="button" onClick={loadDashboard}><Icon name="refresh" />Try again</button>
         </div>
       </main>

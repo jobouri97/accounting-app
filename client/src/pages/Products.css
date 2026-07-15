@@ -58,16 +58,6 @@
   font-size: 24px;
 }
 
-.error-message {
-  margin-bottom: 20px;
-  padding: 14px;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  background-color: #fef2f2;
-  color: #b91c1c;
-  overflow-wrap: anywhere;
-}
-
 @media (max-width: 600px) {
   .products-page {
     padding: 16px 12px;

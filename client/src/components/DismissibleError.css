@@ -1,4 +1,4 @@
-.form-error-message {
+.dismissible-error {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -12,11 +12,11 @@
   overflow-wrap: anywhere;
 }
 
-.form-error-message span {
+.dismissible-error span {
   min-width: 0;
 }
 
-.form-error-close {
+.dismissible-error-close {
   display: flex;
   width: 30px;
   height: 30px;
@@ -33,11 +33,11 @@
   line-height: 1;
 }
 
-.form-error-close:hover {
+.dismissible-error-close:hover {
   background-color: #fee2e2;
 }
 
-.form-error-close:focus-visible {
+.dismissible-error-close:focus-visible {
   outline: 2px solid #b91c1c;
   outline-offset: 2px;
 }

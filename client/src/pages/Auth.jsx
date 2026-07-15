@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { loginAccount, loginWithGoogle, registerAccount } from "../api/auth";
+import DismissibleError from "../components/DismissibleError";
 import "./Auth.css";
 
 const GOOGLE_SCRIPT_ID = "google-identity-services";
@@ -150,7 +151,7 @@ function Auth({ onAuthenticated }) {
             <h2>{mode === "login" ? "Login to your account" : "Register a new account"}</h2>
           </div>
 
-          {error && <div className="auth-error" role="alert">{error}</div>}
+          <DismissibleError message={error} onDismiss={() => setError("")} />
 
           {googleClientId && (
             <>

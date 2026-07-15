@@ -8,6 +8,7 @@ import {
 } from "../api/stockHistory";
 
 import StockHistoryForm from "../components/StockHistoryForm";
+import DismissibleError from "../components/DismissibleError";
 import Pagination from "../components/Pagination";
 import TableStatus from "../components/TableStatus";
 
@@ -156,21 +157,7 @@ function StockHistory({ initialProductId = null }) {
                     </div>
                 </header>
 
-                {error && (
-                    <div className="error-message dismissible-error" role="alert">
-                        <span>{error}</span>
-
-                        <button
-                            type="button"
-                            className="error-message-close"
-                            onClick={() => setError("")}
-                            aria-label="Dismiss error"
-                            title="Dismiss"
-                        >
-                            &times;
-                        </button>
-                    </div>
-                )}
+                <DismissibleError message={error} onDismiss={() => setError("")} />
 
                 <StockHistoryForm
                     products={products}

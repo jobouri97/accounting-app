@@ -111,16 +111,6 @@
   font-size: 25px;
 }
 
-.auth-error {
-  margin-bottom: 18px;
-  padding: 11px 13px;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  background: #fef2f2;
-  color: #b91c1c;
-  font-size: 14px;
-}
-
 .auth-google-button {
   height: 40px;
   overflow: hidden;

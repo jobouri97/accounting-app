@@ -110,43 +110,6 @@
   color: #b91c1c;
 }
 
-.dismissible-error {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.dismissible-error > span {
-  min-width: 0;
-}
-
-.error-message-close {
-  display: flex;
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background-color: transparent;
-  color: #b91c1c;
-  cursor: pointer;
-  font-size: 22px;
-  line-height: 1;
-}
-
-.error-message-close:hover {
-  background-color: #fee2e2;
-}
-
-.error-message-close:focus-visible {
-  outline: 2px solid #b91c1c;
-  outline-offset: 2px;
-}
-
 @media (max-width: 600px) {
   .stock-history-page {
     padding: 16px 12px;

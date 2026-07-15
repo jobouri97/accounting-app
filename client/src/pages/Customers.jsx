@@ -8,6 +8,7 @@ import {
 } from "../api/customers";
 import CustomerForm from "../components/CustomerForm";
 import CustomerTable from "../components/CustomerTable";
+import DismissibleError from "../components/DismissibleError";
 import SearchBox from "../components/SearchBox";
 import TableStatus from "../components/TableStatus";
 import "./Products.css";
@@ -163,7 +164,7 @@ function Customers({ onOpenTransactions }) {
           </div>
         </header>
 
-        {error && <div className="error-message">{error}</div>}
+        <DismissibleError message={error} onDismiss={() => setError("")} />
 
         <CustomerForm
           key={editingCustomer?.id ?? "new-customer"}
