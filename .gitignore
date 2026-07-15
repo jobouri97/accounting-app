@@ -1,10 +1,15 @@
 client/node_modules/
 server/node_modules/
+.pnpm-store/
 
 client/dist/
 
 .env
 server/.env
 client/.env
+.env.*
+!.env.example
+!server/.env.example
+!client/.env.example
 
 .DS_Store

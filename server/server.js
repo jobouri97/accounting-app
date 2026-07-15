@@ -1,24 +1,31 @@
-import express from "express";
-import dotenv from "dotenv";
-import session from "express-session";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import connectPgSimple from "connect-pg-simple";
-import productRoutes from "./routes/productRoutes.js";
-import stockHistoryRoutes from "./routes/stockHistoryRoutes.js";
-import customerRoutes from "./routes/customerRoutes.js";
-import transactionRoutes from "./routes/transactionRoutes.js";
-import invoiceRoutes from "./routes/invoiceRoutes.js";
-import profitRoutes from "./routes/profitRoutes.js";
-import dashboardRoutes from "./routes/dashboardRoutes.js";
+import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
+import session from "express-session";
+
 import authRoutes from "./routes/authRoutes.js";
+import customerRoutes from "./routes/customerRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import invoiceRoutes from "./routes/invoiceRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
+import profitRoutes from "./routes/profitRoutes.js";
+import stockHistoryRoutes from "./routes/stockHistoryRoutes.js";
+import transactionRoutes from "./routes/transactionRoutes.js";
 import { requireAuth } from "./middleware/auth.js";
 import db from "./db/index.js";
-import cors from "cors";
+import { runMigrations } from "./db/migrate.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PgSession = connectPgSimple(session);
+const serverDirectory = path.dirname(fileURLToPath(import.meta.url));
+const clientDirectory = path.resolve(serverDirectory, "../client/dist");
 const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim())
@@ -33,22 +40,21 @@ if (process.env.NODE_ENV === "production") {
 }
 
 app.use(express.json());
+if (process.env.NODE_ENV !== "production" || process.env.CLIENT_ORIGIN) {
+  app.use(
+    cors({
+      origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error("Origin is not allowed by CORS"));
+      },
+      credentials: true,
+    })
+  );
+}
 
-app.get("/", (req, res) => {
-  res.json({
-    message: "Accounting API is running",
-  });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
 });
-
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error("Origin is not allowed by CORS"));
-    },
-    credentials: true,
-  })
-);
 
 app.use(
   session({
@@ -63,7 +69,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
@@ -79,21 +85,37 @@ app.use("/api/invoices", requireAuth, invoiceRoutes);
 app.use("/api/profits", requireAuth, profitRoutes);
 app.use("/api/dashboard", requireAuth, dashboardRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(clientDirectory));
+  app.use((req, res, next) => {
+    if (req.method === "GET" && req.accepts("html")) {
+      return res.sendFile(path.join(clientDirectory, "index.html"));
+    }
 
-async function connectDatabase() {
+    return next();
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.json({ message: "Accounting API is running" });
+  });
+}
+
+async function startServer() {
   try {
+    await runMigrations();
     const result = await db.query("SELECT NOW()");
 
-    console.log("✅ Connected to PostgreSQL");
+    console.log("Connected to PostgreSQL");
     console.log("Database time:", result.rows[0].now);
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   } catch (error) {
-    console.error("❌ Failed to connect to PostgreSQL");
+    console.error("Failed to start server");
     console.error(error.message);
     process.exit(1);
   }
 }
 
-connectDatabase();
+startServer();
