@@ -14,7 +14,6 @@ function CustomerRow({ customer, onEditCustomer, onDeleteCustomer, onOpenTransac
           </div>
           <div>
             <strong>{customer.customer_name}</strong>
-            <span className="product-user-id">User ID: {customer.user_id}</span>
           </div>
         </div>
       </td>
