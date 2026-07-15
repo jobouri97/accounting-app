@@ -42,7 +42,7 @@ function ProductOptions({ item, items, products, onProductSelect }) {
             <span>
               <strong>{product.name}</strong>
               <small>
-                {product.barcode ? `Barcode: ${product.barcode}` : `ID: ${product.id}`}
+                {product.barcode ? `Barcode: ${product.barcode}` : "No barcode"}
               </small>
             </span>
             <span>

@@ -8,6 +8,7 @@ import customerRoutes from "./routes/customerRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import invoiceRoutes from "./routes/invoiceRoutes.js";
 import profitRoutes from "./routes/profitRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import { requireAuth } from "./middleware/auth.js";
 import db from "./db/index.js";
@@ -76,6 +77,7 @@ app.use("/api/customers", requireAuth, customerRoutes);
 app.use("/api/transactions", requireAuth, transactionRoutes);
 app.use("/api/invoices", requireAuth, invoiceRoutes);
 app.use("/api/profits", requireAuth, profitRoutes);
+app.use("/api/dashboard", requireAuth, dashboardRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

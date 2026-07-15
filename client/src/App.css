@@ -37,6 +37,17 @@
   min-width: 0;
   align-items: center;
   gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.app-brand:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 5px;
+  border-radius: 13px;
 }
 
 .app-brand-mark {

@@ -31,14 +31,6 @@ function ProductTable({
         }
     }
 
-    const firstItem =
-        (pagination.page - 1) * pagination.pageSize + 1;
-
-    const lastItem = Math.min(
-        pagination.page * pagination.pageSize,
-        pagination.totalItems
-    );
-
     return (
         <section className="products-table-card">
             <div className="section-heading">
@@ -51,7 +43,6 @@ function ProductTable({
                 <table className="products-table">
                     <thead>
                         <tr>
-                            <th>Product ID</th>
                             <th>Product</th>
                             <th>Barcode</th>
                             <th>Purchase Price</th>

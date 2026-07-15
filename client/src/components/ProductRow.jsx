@@ -14,10 +14,6 @@ function ProductRow({
     return (
         <tr>
             <td>
-                #{product.id}
-            </td>
-
-            <td>
                 <div className="product-name-cell">
                     <div className="product-icon">
                         {product.name
@@ -25,13 +21,7 @@ function ProductRow({
                             : "P"}
                     </div>
 
-                    <div>
-                        <strong>{product.name}</strong>
-
-                        <span className="product-user-id">
-                            User ID: {product.user_id}
-                        </span>
-                    </div>
+                    <strong>{product.name}</strong>
                 </div>
             </td>
 

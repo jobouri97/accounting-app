@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { getCurrentAccount, logoutAccount } from "./api/auth";
+import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import StockHistory from "./pages/StockHistory";
 import Customers from "./pages/Customers";
@@ -14,7 +15,7 @@ function App() {
   const [account, setAccount] = useState(null);
   const [isCheckingAccount, setIsCheckingAccount] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [currentPage, setCurrentPage] = useState("products");
+  const [currentPage, setCurrentPage] = useState("dashboard");
   const [stockHistoryProductId, setStockHistoryProductId] = useState(null);
   const [transactionCustomerId, setTransactionCustomerId] = useState(null);
 
@@ -42,7 +43,7 @@ function App() {
       setIsLoggingOut(true);
       await logoutAccount();
       setAccount(null);
-      setCurrentPage("products");
+      setCurrentPage("dashboard");
     } finally {
       setIsLoggingOut(false);
     }
@@ -85,14 +86,19 @@ function App() {
     <>
       <header className="app-header">
         <div className="app-header-inner">
-          <div className="app-brand">
+          <button
+            type="button"
+            className="app-brand"
+            aria-label="Open dashboard"
+            onClick={() => setCurrentPage("dashboard")}
+          >
             <span className="app-brand-mark" aria-hidden="true">A</span>
 
             <div>
               <strong>Accounting</strong>
               <span>{account.name}</span>
             </div>
-          </div>
+          </button>
 
           <nav className="app-nav" aria-label="Main navigation">
             <button
@@ -182,7 +188,9 @@ function App() {
         </div>
       </header>
 
-      {currentPage === "products" ? (
+      {currentPage === "dashboard" ? (
+        <Dashboard account={account} onNavigate={setCurrentPage} />
+      ) : currentPage === "products" ? (
         <Products
           onOpenStockHistory={openProductStockHistory}
         />

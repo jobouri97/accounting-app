@@ -144,7 +144,6 @@ function Profits() {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Product ID</th>
                     <th>Product Name</th>
                     <th>Purchase Price</th>
                     <th>Selling Price</th>
@@ -164,7 +163,6 @@ function Profits() {
                           (currentPage - 1) * pagination.pageSize -
                           index}
                       </td>
-                      <td>{record.product_id}</td>
                       <td>{record.product_name || "Unknown product"}</td>
                       <td>{formatMoney(record.purchase_price)}</td>
                       <td>{formatMoney(record.selling_price)}</td>

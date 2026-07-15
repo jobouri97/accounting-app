@@ -22,6 +22,9 @@
 5. Apply `server/db/migrations/003_add_google_auth.sql` to the PostgreSQL database.
 6. Restart both the server and client after changing environment variables.
 
+For existing databases, also apply `server/db/migrations/004_scope_product_barcodes_to_users.sql`
+so the same barcode can be used by different accounts while remaining unique within each account.
+
 For production, add the production client URL to the Google client's authorized JavaScript origins and configure the same client ID on both deployed applications.
 
 ## Render deployment configuration

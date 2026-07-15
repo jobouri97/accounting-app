@@ -2,6 +2,14 @@ import db from "../db/index.js";
 import { currentUserId } from "../middleware/auth.js";
 
 const USER_ID = currentUserId;
+const BARCODE_UNIQUE_CONSTRAINTS = new Set([
+  "products_barcode_key",
+  "products_user_id_barcode_key",
+]);
+
+function isDuplicateBarcodeError(error) {
+  return error.code === "23505" && BARCODE_UNIQUE_CONSTRAINTS.has(error.constraint);
+}
 
 //-----------------------------GET ALL PRODUCTS-----------------------------
 
@@ -239,10 +247,7 @@ export async function createProduct(req, res) {
       client.release();
     }
   } catch (error) {
-    if (
-      error.code === "23505" &&
-      error.constraint === "products_barcode_key"
-    ) {
+    if (isDuplicateBarcodeError(error)) {
       return res.status(409).json({
         message: "Barcode already exists.",
       });
@@ -346,10 +351,7 @@ export async function updateProduct(req, res) {
 
     res.status(200).json(result.rows[0]);
   } catch (error) {
-    if (
-      error.code === "23505" &&
-      error.constraint === "products_barcode_key"
-    ) {
+    if (isDuplicateBarcodeError(error)) {
       return res.status(409).json({
         message: "Barcode already exists.",
       });
