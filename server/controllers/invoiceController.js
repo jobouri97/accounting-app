@@ -287,7 +287,6 @@ async function syncInvoiceTransaction(
 }
 
 export async function getAllInvoices(req, res) {
-  try {
     const page = Number(req.query.page ?? 1);
     const customerId = req.query.customer_id
       ? parsePositiveInteger(req.query.customer_id)
@@ -373,14 +372,9 @@ export async function getAllInvoices(req, res) {
         hasPreviousPage: page > 1,
       },
     });
-  } catch (error) {
-    console.error("Get invoices error:", error);
-    res.status(500).json({ message: "Failed to retrieve invoices" });
-  }
 }
 
 export async function getInvoiceById(req, res) {
-  try {
     const invoiceId = parsePositiveInteger(req.params.id);
     if (!invoiceId) {
       return res.status(400).json({ message: "Invoice ID must be a positive integer" });
@@ -429,10 +423,6 @@ export async function getInvoiceById(req, res) {
       invoice: invoiceResult.rows[0],
       items: itemsResult.rows,
     });
-  } catch (error) {
-    console.error("Get invoice error:", error);
-    res.status(500).json({ message: "Failed to retrieve invoice" });
-  }
 }
 
 export async function createInvoice(req, res) {
@@ -515,8 +505,7 @@ export async function createInvoice(req, res) {
     });
   } catch (error) {
     if (client) await client.query("ROLLBACK");
-    console.error("Create invoice error:", error);
-    res.status(500).json({ message: "Failed to create invoice" });
+    throw error;
   } finally {
     client?.release();
   }
@@ -647,8 +636,7 @@ export async function updateInvoice(req, res) {
     });
   } catch (error) {
     if (client) await client.query("ROLLBACK");
-    console.error("Update invoice error:", error);
-    res.status(500).json({ message: "Failed to update invoice" });
+    throw error;
   } finally {
     client?.release();
   }
@@ -718,8 +706,7 @@ export async function deleteInvoice(req, res) {
     res.status(200).json({ message: "Invoice deleted successfully", invoiceId });
   } catch (error) {
     if (client) await client.query("ROLLBACK");
-    console.error("Delete invoice error:", error);
-    res.status(500).json({ message: "Failed to delete invoice" });
+    throw error;
   } finally {
     client?.release();
   }

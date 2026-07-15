@@ -95,7 +95,6 @@ async function emailBelongsToAnotherUser(email, excludedUserId = null) {
 }
 
 export async function getAllUsers(req, res) {
-  try {
     const page = Number(req.query.page ?? 1);
     const search = req.query.search?.trim() || "";
 
@@ -140,14 +139,9 @@ export async function getAllUsers(req, res) {
         hasPreviousPage: page > 1,
       },
     });
-  } catch (error) {
-    console.error("Get users error:", error);
-    res.status(500).json({ message: "Failed to retrieve users" });
-  }
 }
 
 export async function getUserById(req, res) {
-  try {
     const userId = parseUserId(req.params.id);
 
     if (!userId) {
@@ -166,10 +160,6 @@ export async function getUserById(req, res) {
     }
 
     res.status(200).json(result.rows[0]);
-  } catch (error) {
-    console.error("Get user error:", error);
-    res.status(500).json({ message: "Failed to retrieve user" });
-  }
 }
 
 export async function createUser(req, res) {
@@ -198,8 +188,7 @@ export async function createUser(req, res) {
       return res.status(409).json({ message: "Email is already in use" });
     }
 
-    console.error("Create user error:", error);
-    res.status(500).json({ message: "Failed to create user" });
+    throw error;
   }
 }
 
@@ -250,8 +239,7 @@ export async function updateUser(req, res) {
       return res.status(409).json({ message: "Email is already in use" });
     }
 
-    console.error("Update user error:", error);
-    res.status(500).json({ message: "Failed to update user" });
+    throw error;
   }
 }
 
@@ -284,7 +272,6 @@ export async function deleteUser(req, res) {
       });
     }
 
-    console.error("Delete user error:", error);
-    res.status(500).json({ message: "Failed to delete user" });
+    throw error;
   }
 }

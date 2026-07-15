@@ -16,6 +16,7 @@ import profitRoutes from "./routes/profitRoutes.js";
 import stockHistoryRoutes from "./routes/stockHistoryRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import { requireAuth } from "./middleware/auth.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 import db from "./db/index.js";
 import { runMigrations } from "./db/migrate.js";
 
@@ -99,6 +100,8 @@ if (process.env.NODE_ENV === "production") {
     res.json({ message: "Accounting API is running" });
   });
 }
+
+app.use(errorHandler);
 
 async function startServer() {
   try {

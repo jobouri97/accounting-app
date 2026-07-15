@@ -7,13 +7,14 @@ import {
     updateStockHistory,
     deleteStockHistory,
 } from "../controllers/stockHistoryController.js";
+import { asyncHandler } from "../middleware/errorHandler.js";
 
 const router = express.Router();
 
-router.get("/", getStockHistory);
-router.get("/:id", getStockHistoryById);
-router.post("/", createStockHistory);
-router.put("/:id", updateStockHistory);
-router.delete("/:id", deleteStockHistory);
+router.get("/", asyncHandler(getStockHistory, "Failed to retrieve stock history"));
+router.get("/:id", asyncHandler(getStockHistoryById, "Failed to retrieve stock history record"));
+router.post("/", asyncHandler(createStockHistory, "Failed to create stock history"));
+router.put("/:id", asyncHandler(updateStockHistory, "Failed to update stock history"));
+router.delete("/:id", asyncHandler(deleteStockHistory, "Failed to delete stock history"));
 
 export default router;

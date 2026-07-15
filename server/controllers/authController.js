@@ -55,6 +55,15 @@ function startSession(req, userId) {
   });
 }
 
+function destroySession(req) {
+  return new Promise((resolve, reject) => {
+    req.session.destroy((error) => {
+      if (error) return reject(error);
+      resolve();
+    });
+  });
+}
+
 export async function register(req, res) {
   try {
     const validation = validateCredentials(req.body, true);
@@ -88,13 +97,11 @@ export async function register(req, res) {
       return res.status(409).json({ message: "Email is already in use" });
     }
 
-    console.error("Register error:", error);
-    res.status(500).json({ message: "Failed to register" });
+    throw error;
   }
 }
 
 export async function login(req, res) {
-  try {
     const validation = validateCredentials(req.body, false);
     if (validation.error) {
       return res.status(400).json({ message: validation.error });
@@ -132,10 +139,6 @@ export async function login(req, res) {
         created_at: account.created_at,
       },
     });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Failed to log in" });
-  }
 }
 
 export async function googleLogin(req, res) {
@@ -218,49 +221,33 @@ export async function googleLogin(req, res) {
       return res.status(409).json({ message: "This Google account is linked to another user" });
     }
 
-    console.error("Google account database error:", error);
-    return res.status(500).json({ message: "Failed to save Google account" });
+    error.fallbackMessage = "Failed to save Google account";
+    throw error;
   } finally {
     client?.release();
   }
 
-  try {
-    await startSession(req, user.id);
-    return res.status(200).json({ user });
-  } catch (error) {
-    console.error("Google session error:", error);
-    return res.status(500).json({ message: "Failed to start login session" });
-  }
+  await startSession(req, user.id);
+  return res.status(200).json({ user });
 }
 
 export async function logout(req, res) {
-  req.session.destroy((error) => {
-    if (error) {
-      console.error("Logout error:", error);
-      return res.status(500).json({ message: "Failed to log out" });
-    }
-
-    res.clearCookie("accounting.sid");
-    res.status(200).json({ message: "Logged out successfully" });
-  });
+  await destroySession(req);
+  res.clearCookie("accounting.sid");
+  res.status(200).json({ message: "Logged out successfully" });
 }
 
 export async function getCurrentUser(req, res) {
-  try {
     const result = await db.query(
       `SELECT id, name, email, created_at FROM users WHERE id = $1`,
       [req.session.userId]
     );
 
     if (result.rows.length === 0) {
-      return req.session.destroy(() =>
-        res.status(401).json({ message: "Authentication required" })
-      );
+      await destroySession(req);
+      res.clearCookie("accounting.sid");
+      return res.status(401).json({ message: "Authentication required" });
     }
 
     res.status(200).json({ user: result.rows[0] });
-  } catch (error) {
-    console.error("Get current user error:", error);
-    res.status(500).json({ message: "Failed to retrieve account" });
-  }
 }

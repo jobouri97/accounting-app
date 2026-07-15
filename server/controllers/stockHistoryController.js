@@ -6,7 +6,6 @@ const PAGE_SIZE = 100;
 
 // GET /api/stock-history
 export async function getStockHistory(req, res) {
-    try {
         const page = Number(req.query.page ?? 1);
         const productId = req.query.product_id
             ? Number(req.query.product_id)
@@ -86,18 +85,10 @@ export async function getStockHistory(req, res) {
                 hasPreviousPage: page > 1,
             },
         });
-    } catch (error) {
-        console.error("Get stock history error:", error);
-
-        res.status(500).json({
-            message: "Failed to retrieve stock history",
-        });
-    }
 }
 
 // GET /api/stock-history/:id
 export async function getStockHistoryById(req, res) {
-    try {
         const historyId = Number(req.params.id);
 
         if (!Number.isInteger(historyId) || historyId < 1) {
@@ -131,13 +122,6 @@ export async function getStockHistoryById(req, res) {
         }
 
         res.status(200).json(result.rows[0]);
-    } catch (error) {
-        console.error("Get stock history record error:", error);
-
-        res.status(500).json({
-            message: "Failed to retrieve stock history record",
-        });
-    }
 }
 
 // POST /api/stock-history
@@ -249,12 +233,7 @@ export async function createStockHistory(req, res) {
         });
     } catch (error) {
         await client.query("ROLLBACK");
-
-        console.error("Create stock history error:", error);
-
-        res.status(500).json({
-            message: "Failed to update product stock",
-        });
+        throw error;
     } finally {
         client.release();
     }
@@ -387,12 +366,7 @@ export async function updateStockHistory(req, res) {
         });
     } catch (error) {
         await client.query("ROLLBACK");
-
-        console.error("Update stock history error:", error);
-
-        res.status(500).json({
-            message: "Failed to update stock history",
-        });
+        throw error;
     } finally {
         client.release();
     }
@@ -485,12 +459,7 @@ export async function deleteStockHistory(req, res) {
         });
     } catch (error) {
         await client.query("ROLLBACK");
-
-        console.error("Delete stock history error:", error);
-
-        res.status(500).json({
-            message: "Failed to delete stock history",
-        });
+        throw error;
     } finally {
         client.release();
     }

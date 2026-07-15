@@ -48,7 +48,6 @@ function validateCustomer(body) {
 }
 
 export async function getAllCustomers(req, res) {
-  try {
     const page = Number(req.query.page ?? 1);
     const search = req.query.search?.trim() || "";
 
@@ -116,14 +115,9 @@ export async function getAllCustomers(req, res) {
         hasPreviousPage: page > 1,
       },
     });
-  } catch (error) {
-    console.error("Get customers error:", error);
-    res.status(500).json({ message: "Failed to retrieve customers" });
-  }
 }
 
 export async function getCustomerById(req, res) {
-  try {
     const customerId = parseCustomerId(req.params.id);
 
     if (!customerId) {
@@ -154,14 +148,9 @@ export async function getCustomerById(req, res) {
     }
 
     res.status(200).json(result.rows[0]);
-  } catch (error) {
-    console.error("Get customer error:", error);
-    res.status(500).json({ message: "Failed to retrieve customer" });
-  }
 }
 
 export async function createCustomer(req, res) {
-  try {
     const validation = validateCustomer(req.body);
 
     if (validation.error) {
@@ -177,14 +166,9 @@ export async function createCustomer(req, res) {
     );
 
     res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error("Create customer error:", error);
-    res.status(500).json({ message: "Failed to create customer" });
-  }
 }
 
 export async function updateCustomer(req, res) {
-  try {
     const customerId = parseCustomerId(req.params.id);
 
     if (!customerId) {
@@ -215,10 +199,6 @@ export async function updateCustomer(req, res) {
     }
 
     res.status(200).json(result.rows[0]);
-  } catch (error) {
-    console.error("Update customer error:", error);
-    res.status(500).json({ message: "Failed to update customer" });
-  }
 }
 
 export async function deleteCustomer(req, res) {
@@ -279,8 +259,7 @@ export async function deleteCustomer(req, res) {
       });
     }
 
-    console.error("Delete customer error:", error);
-    res.status(500).json({ message: "Failed to delete customer" });
+    throw error;
   } finally {
     client?.release();
   }

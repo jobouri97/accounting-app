@@ -12,7 +12,6 @@ function isValidDate(value) {
 }
 
 export async function getAllProfits(req, res) {
-  try {
     const page = Number(req.query.page ?? 1);
 
     if (!Number.isInteger(page) || page < 1) {
@@ -114,8 +113,4 @@ export async function getAllProfits(req, res) {
         totalProfit: countResult.rows[0].total_profit,
       },
     });
-  } catch (error) {
-    console.error("Get profits error:", error);
-    res.status(500).json({ message: "Failed to retrieve profits" });
-  }
 }

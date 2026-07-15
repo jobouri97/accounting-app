@@ -61,7 +61,6 @@ function validateTransaction(body) {
 }
 
 export async function getAllTransactions(req, res) {
-  try {
     const page = Number(req.query.page ?? 1);
     const customerId = req.query.customer_id
       ? parsePositiveInteger(req.query.customer_id)
@@ -140,14 +139,9 @@ export async function getAllTransactions(req, res) {
         hasPreviousPage: page > 1,
       },
     });
-  } catch (error) {
-    console.error("Get transactions error:", error);
-    res.status(500).json({ message: "Failed to retrieve transactions" });
-  }
 }
 
 export async function getTransactionById(req, res) {
-  try {
     const transactionId = parsePositiveInteger(req.params.id);
 
     if (!transactionId) {
@@ -177,10 +171,6 @@ export async function getTransactionById(req, res) {
     }
 
     res.status(200).json(result.rows[0]);
-  } catch (error) {
-    console.error("Get transaction error:", error);
-    res.status(500).json({ message: "Failed to retrieve transaction" });
-  }
 }
 
 export async function createTransaction(req, res) {
@@ -228,8 +218,7 @@ export async function createTransaction(req, res) {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Create transaction error:", error);
-    res.status(500).json({ message: "Failed to create transaction" });
+    throw error;
   } finally {
     client.release();
   }
@@ -345,8 +334,7 @@ export async function updateTransaction(req, res) {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Update transaction error:", error);
-    res.status(500).json({ message: "Failed to update transaction" });
+    throw error;
   } finally {
     client.release();
   }
@@ -406,8 +394,7 @@ export async function deleteTransaction(req, res) {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Delete transaction error:", error);
-    res.status(500).json({ message: "Failed to delete transaction" });
+    throw error;
   } finally {
     client.release();
   }

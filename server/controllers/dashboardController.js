@@ -4,7 +4,6 @@ import { currentUserId } from "../middleware/auth.js";
 const USER_ID = currentUserId;
 
 export async function getDashboard(req, res) {
-  try {
     const [summaryResult, trendResult, recentInvoicesResult, lowStockResult, topProductsResult] =
       await Promise.all([
         db.query(
@@ -99,8 +98,4 @@ export async function getDashboard(req, res) {
       lowStock: lowStockResult.rows,
       topProducts: topProductsResult.rows,
     });
-  } catch (error) {
-    console.error("Get dashboard error:", error);
-    res.status(500).json({ message: "Failed to retrieve dashboard" });
-  }
 }

@@ -14,7 +14,6 @@ function isDuplicateBarcodeError(error) {
 //-----------------------------GET ALL PRODUCTS-----------------------------
 
 export async function getAllProducts(req, res) {
-  try {
     const page = Number(req.query.page ?? 1);
     const limit = 100;
     const search = req.query.search?.trim() || "";
@@ -87,19 +86,11 @@ export async function getAllProducts(req, res) {
         hasPreviousPage: page > 1,
       },
     });
-  } catch (error) {
-    console.error("Get products error:", error);
-
-    res.status(500).json({
-      message: "Failed to retrieve products",
-    });
-  }
 }
 
 //-----------------------------GET ONE PRODUCT BY ID-----------------------------
 
 export async function getProductById(req, res) {
-  try {
     const productId = req.params.id;
 
     const result = await db.query(
@@ -116,13 +107,6 @@ export async function getProductById(req, res) {
     }
 
     res.status(200).json(result.rows[0]);
-  } catch (error) {
-    console.error("Get product error:", error);
-
-    res.status(500).json({
-      message: "Failed to retrieve product",
-    });
-  }
 }
 
 //-----------------------------CREATE NEW PRODUCT-----------------------------
@@ -253,11 +237,7 @@ export async function createProduct(req, res) {
       });
     }
 
-    console.error("Product error:", error);
-
-    res.status(500).json({
-      message: "Failed to save product",
-    });
+    throw error;
   }
 }
 
@@ -357,18 +337,13 @@ export async function updateProduct(req, res) {
       });
     }
 
-    console.error("Product error:", error);
-
-    res.status(500).json({
-      message: "Failed to save product",
-    });
+    throw error;
   }
 }
 
 //-----------------------------DELETE PRODUCT-----------------------------
 
 export async function deleteProduct(req, res) {
-  try {
     const productId = req.params.id;
 
     const result = await db.query(
@@ -388,11 +363,4 @@ export async function deleteProduct(req, res) {
       message: "Product deleted successfully",
       productId: result.rows[0].id,
     });
-  } catch (error) {
-    console.error("Delete product error:", error);
-
-    res.status(500).json({
-      message: "Failed to delete product",
-    });
-  }
 }
