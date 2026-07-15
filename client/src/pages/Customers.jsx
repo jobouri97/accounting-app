@@ -9,6 +9,7 @@ import {
 import CustomerForm from "../components/CustomerForm";
 import CustomerTable from "../components/CustomerTable";
 import SearchBox from "../components/SearchBox";
+import TableStatus from "../components/TableStatus";
 import "./Products.css";
 
 const initialPagination = {
@@ -181,7 +182,7 @@ function Customers({ onOpenTransactions }) {
         />
 
         {isLoading ? (
-          <div className="products-status">Loading customers...</div>
+          <TableStatus>Loading customers...</TableStatus>
         ) : (
           <CustomerTable
             customers={customers}

@@ -14,6 +14,7 @@ import {
 import ProductForm from "../components/ProductForm";
 import ProductTable from "../components/ProductTable";
 import SearchBox from "../components/SearchBox";
+import TableStatus from "../components/TableStatus";
 
 import "./Products.css";
 
@@ -222,9 +223,7 @@ function Products({ onOpenStockHistory }) {
         />
 
         {isLoading ? (
-          <div className="products-status">
-            Loading products...
-          </div>
+          <TableStatus>Loading products...</TableStatus>
         ) : (
           <ProductTable
             products={products}

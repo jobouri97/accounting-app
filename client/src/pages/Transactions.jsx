@@ -8,6 +8,7 @@ import {
   updateTransaction,
 } from "../api/transactions";
 import Pagination from "../components/Pagination";
+import TableStatus from "../components/TableStatus";
 import TransactionForm from "../components/TransactionForm";
 import "./Transactions.css";
 
@@ -185,7 +186,7 @@ function Transactions({ initialCustomerId = null }) {
         />
 
         {isLoading ? (
-          <div className="transactions-status">Loading transactions...</div>
+          <TableStatus>Loading transactions...</TableStatus>
         ) : transactions.length === 0 ? (
           <div className="transactions-status">No transactions found.</div>
         ) : (

@@ -11,6 +11,7 @@ import {
 import { getProducts } from "../api/products";
 import InvoiceForm from "../components/InvoiceForm";
 import Pagination from "../components/Pagination";
+import TableStatus from "../components/TableStatus";
 import { openInvoicePrintView } from "../utils/invoicePrint";
 import "./Invoices.css";
 
@@ -326,7 +327,7 @@ function Invoices() {
           </div>
 
           {isLoading ? (
-            <div className="invoices-status">Loading invoices...</div>
+            <TableStatus>Loading invoices...</TableStatus>
           ) : invoices.length === 0 ? (
             <div className="invoices-empty">
               <span aria-hidden="true">#</span>

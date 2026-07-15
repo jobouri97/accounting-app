@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getProfits } from "../api/profits";
 import DatePicker from "../components/DatePicker";
 import Pagination from "../components/Pagination";
+import TableStatus from "../components/TableStatus";
 import "./Profits.css";
 
 const initialPagination = {
@@ -134,7 +135,7 @@ function Profits() {
         </section>
 
         {isLoading ? (
-          <div className="profits-status">Loading profits...</div>
+          <TableStatus>Loading profits...</TableStatus>
         ) : profits.length === 0 ? (
           <div className="profits-status">No profit records found.</div>
         ) : (

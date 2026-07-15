@@ -68,13 +68,6 @@
   overflow-wrap: anywhere;
 }
 
-.products-status {
-  padding: 30px;
-  border-radius: 14px;
-  background-color: white;
-  text-align: center;
-}
-
 @media (max-width: 600px) {
   .products-page {
     padding: 16px 12px;

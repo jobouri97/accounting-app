@@ -9,6 +9,7 @@ import {
 
 import StockHistoryForm from "../components/StockHistoryForm";
 import Pagination from "../components/Pagination";
+import TableStatus from "../components/TableStatus";
 
 import "./StockHistory.css";
 
@@ -179,7 +180,7 @@ function StockHistory({ initialProductId = null }) {
                 />
 
                 {isLoading ? (
-                    <div>Loading stock history...</div>
+                    <TableStatus>Loading stock history...</TableStatus>
                 ) : history.length === 0 ? (
                     <div>No stock history records found.</div>
                 ) : (
