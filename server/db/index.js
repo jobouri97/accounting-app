@@ -8,7 +8,9 @@ const db = new Pool(
     ? {
         connectionString: process.env.DATABASE_URL,
         ssl: process.env.DB_SSL === "true"
-          ? { rejectUnauthorized: false }
+          ? { rejectUnauthorized: false } //An SSL certificate is a digital identity card for a server.
+                                          //rejectUnauthorized: false => the connection remains encrypted, but your app does not verify the server’s identity properly.
+                                          //rejectUnauthorized: true may fail unless Node.js trusts the Supabase certificate.
           : undefined,
       }
     : {

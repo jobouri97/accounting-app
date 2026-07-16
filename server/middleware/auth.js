@@ -1,10 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-const authStorage = new AsyncLocalStorage();
+const authStorage = new AsyncLocalStorage(); //The store exists in the Node.js server’s memory.
 
 export const currentUserId = {
   toPostgres() {
-    const userId = authStorage.getStore()?.userId;
+    const userId = authStorage.getStore()?.userId; //get userid from postgres
     if (!userId) throw new Error("Authenticated user context is missing");
     return userId;
   },

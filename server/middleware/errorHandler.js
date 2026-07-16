@@ -1,4 +1,4 @@
-export function asyncHandler(handler, fallbackMessage) {
+export function asyncHandler(handler, fallbackMessage) { //asyncHandler is used around controller functions in nearly every route file
   return function handleAsyncRequest(req, res, next) {
     Promise.resolve(handler(req, res, next)).catch((error) => {
       const normalizedError = error instanceof Error
@@ -11,7 +11,8 @@ export function asyncHandler(handler, fallbackMessage) {
   };
 }
 
-export function errorHandler(error, req, res, next) {
+export function errorHandler(error, req, res, next) { //Express recognizes error middleware by its four parameters
+                                                      //When an error occurs Express skips normal middleware and searches for the next middleware with four parameters (since normal middleware has three.)
   if (res.headersSent) {
     return next(error);
   }
@@ -29,3 +30,7 @@ export function errorHandler(error, req, res, next) {
 
   return res.status(status).json({ message });
 }
+
+/* They work together, but have different roles.
+If the controller succeeds, the response continues normally.
+If the controller throws an error, asyncHandler catches it and forwards it to the global errorHandler (to transform the error into json format)*/
